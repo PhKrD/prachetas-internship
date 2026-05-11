@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Users, Repeat, IndianRupee, CalendarCheck, GraduationCap, BadgeCheck, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Users, Repeat, IndianRupee, CalendarCheck, GraduationCap, BadgeCheck, ExternalLink, Copy, Check, Eye, EyeOff, Link } from 'lucide-react'
 import { batchMeta, studentsData } from '../data/studentsData'
+
+const BASE_DONATE_URL = 'https://prachetasfoundation.com/donate'
 
 const StatCard = ({ icon: Icon, label, value, sub, iconBg, iconColor }) => (
   <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
@@ -42,6 +45,31 @@ const StudentProfile = ({ student, onBack }) => {
   const rank = [...studentsData]
     .sort((a, b) => b.donorsCollected - a.donorsCollected)
     .findIndex(s => s.id === student.id) + 1
+
+  const slug = student.rollNo.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()
+  const personalLink = `${BASE_DONATE_URL}?ref=${slug}`
+
+  const storageKey = `fl_show_${slug}`
+  const [showOnDashboard, setShowOnDashboard] = useState(
+    () => localStorage.getItem(storageKey) !== 'false'
+  )
+  const [copied, setCopied] = useState(false)
+
+  const toggleShowOnDashboard = (val) => {
+    setShowOnDashboard(val)
+    localStorage.setItem(storageKey, String(val))
+    fetch(
+      `/.netlify/functions/fundraiser-link?slug=${slug}`,
+      { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ showOnDashboard: val }) }
+    ).catch(() => {})
+  }
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(personalLink).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-16">
@@ -128,24 +156,85 @@ const StudentProfile = ({ student, onBack }) => {
           />
         </motion.div>
 
-        {/* CTA */}
+        {/* My Fundraiser Link */}
         <motion.div
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
+          className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6"
+        >
+          <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Link size={18} className="text-orange-500" /> My Fundraiser Link
+          </h2>
+
+          <p className="text-sm text-gray-500 mb-4">
+            Share this personal link. Every donation made through it will be tracked under your name.
+          </p>
+
+          {/* Link display + copy */}
+          <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 mb-4">
+            <span className="flex-1 text-sm text-gray-700 truncate font-mono">{personalLink}</span>
+            <button
+              onClick={copyLink}
+              className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${
+                copied ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+              }`}
+            >
+              {copied ? <><Check size={13} /> Copied!</> : <><Copy size={13} /> Copy</>}
+            </button>
+          </div>
+
+          {/* Direct donate button */}
+          <a
+            href={personalLink}
+            target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold px-5 py-2.5 rounded-xl text-sm shadow hover:shadow-md transition-all mb-4"
+          >
+            Open Donation Page <ExternalLink size={13} />
+          </a>
+
+          {/* Show on dashboard toggle */}
+          <div className="flex items-center justify-between border-t border-gray-100 pt-4 mt-2">
+            <div>
+              <div className="text-sm font-semibold text-gray-800">Show on Public Dashboard</div>
+              <div className="text-xs text-gray-400">Allow your fundraiser stats to appear publicly</div>
+            </div>
+            <button
+              onClick={() => toggleShowOnDashboard(!showOnDashboard)}
+              className={`relative w-11 h-6 rounded-full transition-colors ${
+                showOnDashboard ? 'bg-green-500' : 'bg-gray-300'
+              }`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                showOnDashboard ? 'translate-x-5' : 'translate-x-0'
+              }`} />
+            </button>
+          </div>
+
+          {showOnDashboard ? (
+            <p className="text-xs text-green-600 font-medium mt-2 flex items-center gap-1"><Eye size={12} /> Visible on dashboard</p>
+          ) : (
+            <p className="text-xs text-gray-400 font-medium mt-2 flex items-center gap-1"><EyeOff size={12} /> Hidden from dashboard</p>
+          )}
+        </motion.div>
+
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
           className="bg-gradient-to-br from-green-700 to-green-900 rounded-2xl p-6 text-center shadow-lg"
         >
           <div className="text-white font-bold text-lg mb-1">
             Support {student.name.split(' ')[0]}'s Campaign
           </div>
           <p className="text-green-200 text-sm mb-4">
-            Make a one-time donation or start a SIP to support Prachetas Foundation's environmental mission.
+            Make a one-time donation or start a SIP to support Prachetas Foundation's mission.
           </p>
           <a
-            href="https://prachetasfoundation.com"
+            href={personalLink}
             target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-xl text-sm shadow hover:shadow-lg transition-all"
           >
-            Donate on Prachetas Foundation <ExternalLink size={14} />
+            Donate via {student.name.split(' ')[0]}'s Link <ExternalLink size={14} />
           </a>
         </motion.div>
 
