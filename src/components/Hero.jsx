@@ -1,113 +1,196 @@
-import { motion } from 'framer-motion'
-import { ExternalLink, Users, Target, TrendingUp } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { motion, useInView } from 'framer-motion'
+import { ExternalLink, Flame, Target, Users, Zap } from 'lucide-react'
 import { studentsData } from '../data/studentsData'
 
+const END_DATE = new Date('2026-08-31T23:59:59')
+
+const CountUp = ({ target, duration = 2000 }) => {
+  const [count, setCount] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
+  useEffect(() => {
+    if (!inView || !target) return
+    const t0 = performance.now()
+    let raf
+    const tick = (now) => {
+      const p = Math.min((now - t0) / duration, 1)
+      setCount(Math.floor((1 - (1 - p) ** 3) * target))
+      if (p < 1) raf = requestAnimationFrame(tick)
+      else setCount(target)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [inView, target, duration])
+  return <span ref={ref}>{count.toLocaleString('en-IN')}</span>
+}
+
 const Hero = () => {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 })
+  useEffect(() => {
+    const update = () => {
+      const diff = END_DATE - new Date()
+      if (diff <= 0) return
+      setTimeLeft({
+        days:  Math.floor(diff / 86400000),
+        hours: Math.floor((diff % 86400000) / 3600000),
+        mins:  Math.floor((diff % 3600000) / 60000),
+      })
+    }
+    update()
+    const id = setInterval(update, 60000)
+    return () => clearInterval(id)
+  }, [])
+
   const totalDonors = studentsData.reduce((s, x) => s + x.donorsCollected, 0)
   const totalSIP    = studentsData.reduce((s, x) => s + x.sipConversions, 0)
   const totalAmt    = studentsData.reduce((s, x) => s + x.totalAmountCollected, 0)
   const DONOR_TARGET = 18000
-
   const pct = Math.round((totalDonors / DONOR_TARGET) * 100)
-
-  const fmt = (n) =>
-    n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` :
-    n >= 1000   ? `₹${(n / 1000).toFixed(1)}K`   : `₹${n}`
+  const C = 2 * Math.PI * 54
+  const fmt = (n) => n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : `₹${(n / 1000).toFixed(0)}K`
 
   return (
-    <section className="relative pt-16 overflow-hidden bg-gradient-to-br from-green-900 via-green-800 to-green-700 min-h-[520px] flex items-center">
-      {/* Background pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1"/>
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#grid)" />
+    <section
+      className="relative pt-16 overflow-hidden min-h-screen flex items-center"
+      style={{ background: 'linear-gradient(135deg, #061a0a 0%, #0a2e10 35%, #0f3d1a 65%, #061a0a 100%)' }}
+    >
+      {/* Radial glows */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] rounded-full opacity-10"
+          style={{ background: 'radial-gradient(circle, #4ade80, transparent 70%)' }} />
+        <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] rounded-full opacity-8"
+          style={{ background: 'radial-gradient(circle, #f97316, transparent 70%)' }} />
+        {/* Dot grid */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
+          <defs><pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse">
+            <circle cx="1.5" cy="1.5" r="1.5" fill="white" />
+          </pattern></defs>
+          <rect width="100%" height="100%" fill="url(#dots)" />
         </svg>
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
 
-          {/* Left — text */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-          >
-            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white text-xs font-semibold px-3 py-1.5 rounded-full mb-5">
-              <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span>
-              Live Campaign Tracker
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl font-extrabold text-white leading-tight mb-4 text-balance">
-              COEP × Prachetas<br/>
-              <span className="text-orange-400">Social Internship</span>
-            </h1>
-            <p className="text-green-100 text-lg mb-6 leading-relaxed max-w-lg">
-              180 engineering students from COEP Pune are on a mission — reaching 18,000 people to support Prachetas Foundation's work in environmental conservation.
-            </p>
-
-            <div className="flex flex-wrap gap-3 mb-8">
-              <div className="flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2 text-white text-sm font-medium border border-white/20">
-                <Users size={16} className="text-orange-300" />
-                180 Student Interns
-              </div>
-              <div className="flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2 text-white text-sm font-medium border border-white/20">
-                <Target size={16} className="text-orange-300" />
-                18,000 Donor Target
-              </div>
-              <div className="flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2 text-white text-sm font-medium border border-white/20">
-                <TrendingUp size={16} className="text-orange-300" />
-                4 Batches
-              </div>
-            </div>
-
-            <a
-              href="https://prachetasfoundation.com"
-              target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-xl text-base shadow-lg hover:shadow-xl transition-all"
+          {/* ── Left copy ── */}
+          <motion.div initial={{ opacity: 0, x: -40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.9 }}>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 bg-orange-500/15 border border-orange-500/30 text-orange-300 text-xs font-bold px-4 py-1.5 rounded-full mb-7 tracking-widest uppercase"
             >
-              Support This Campaign
-              <ExternalLink size={16} />
-            </a>
+              <Flame size={12} className="text-orange-400" fill="currentColor" />
+              Live Campaign · COEP × Prachetas 2025
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.9 }}
+              className="text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-7"
+            >
+              Be The<br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 via-emerald-300 to-green-400">Change.</span><br/>
+              Fund The<br/>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-400 to-orange-500">Future.</span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5, duration: 0.8 }}
+              className="text-green-100/80 text-lg leading-relaxed mb-8 max-w-lg"
+            >
+              180 COEP engineers are on a mission to mobilise{' '}
+              <span className="text-white font-bold">18,000 donors</span> for Prachetas Foundation —
+              creating lasting environmental impact, one SIP at a time.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65 }}
+              className="flex flex-wrap gap-3 mb-10"
+            >
+              <a
+                href="https://prachetasfoundation.com" target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white font-extrabold px-7 py-3.5 rounded-2xl text-base shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 transition-all"
+              >
+                Donate Now <ExternalLink size={16} />
+              </a>
+              <a href="#students"
+                className="flex items-center gap-2 bg-white/8 hover:bg-white/15 border border-white/15 text-white font-semibold px-7 py-3.5 rounded-2xl text-base transition-all"
+              >
+                <Zap size={16} className="text-green-300" /> View Students
+              </a>
+            </motion.div>
+
+            {/* Countdown */}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}>
+              <div className="text-green-400 text-xs font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-ping"></span>
+                Campaign Countdown
+              </div>
+              <div className="flex gap-3">
+                {[
+                  { v: timeLeft.days,  l: 'Days'  },
+                  { v: timeLeft.hours, l: 'Hours' },
+                  { v: timeLeft.mins,  l: 'Mins'  },
+                ].map(({ v, l }) => (
+                  <div key={l} className="bg-white/8 border border-white/15 rounded-2xl px-5 py-3 text-center min-w-[68px] backdrop-blur-sm">
+                    <div className="text-3xl font-black text-white tabular-nums">{String(v).padStart(2,'0')}</div>
+                    <div className="text-xs text-green-400 font-semibold mt-0.5">{l}</div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
           </motion.div>
 
-          {/* Right — progress circle + stats */}
+          {/* ── Right ring + stats ── */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="flex flex-col items-center gap-6"
+            initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.9, delay: 0.25 }}
+            className="flex flex-col items-center gap-8"
           >
-            {/* Circular progress */}
-            <div className="relative w-52 h-52">
-              <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-                <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="10"/>
-                <circle
-                  cx="60" cy="60" r="50" fill="none"
-                  stroke="#f97316" strokeWidth="10" strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 50}`}
-                  strokeDashoffset={`${2 * Math.PI * 50 * (1 - pct / 100)}`}
-                  style={{ transition: 'stroke-dashoffset 1s ease' }}
+            {/* Glowing ring */}
+            <div className="relative">
+              {/* glow halo */}
+              <div className="absolute inset-0 rounded-full blur-3xl opacity-25 scale-110"
+                style={{ background: `conic-gradient(from 270deg, #4ade80 ${pct}%, transparent ${pct}%)` }} />
+              <svg className="w-64 h-64 -rotate-90 drop-shadow-xl" viewBox="0 0 120 120">
+                <defs>
+                  <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%"   stopColor="#4ade80" />
+                    <stop offset="100%" stopColor="#f97316" />
+                  </linearGradient>
+                </defs>
+                <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="9" />
+                <circle cx="60" cy="60" r="54" fill="none" stroke="url(#ringGrad)" strokeWidth="9"
+                  strokeLinecap="round"
+                  strokeDasharray={C}
+                  strokeDashoffset={C * (1 - pct / 100)}
+                  style={{ filter: 'drop-shadow(0 0 10px rgba(74,222,128,0.7))', transition: 'stroke-dashoffset 1.6s ease' }}
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                <span className="text-4xl font-black">{pct}%</span>
-                <span className="text-xs text-green-200 font-medium mt-0.5">of donor target</span>
+                <div className="text-5xl font-black leading-none">
+                  <CountUp target={pct} /><span className="text-3xl">%</span>
+                </div>
+                <div className="text-sm text-emerald-300 font-bold mt-1">of donor target</div>
+                <div className="text-xs text-white/40 mt-1">
+                  <CountUp target={totalDonors} /> / {DONOR_TARGET.toLocaleString('en-IN')}
+                </div>
               </div>
             </div>
 
-            {/* Mini stats */}
-            <div className="grid grid-cols-3 gap-3 w-full max-w-sm">
+            {/* Quick stat grid */}
+            <div className="grid grid-cols-2 gap-3 w-full max-w-xs">
               {[
-                { label: 'Donors', value: totalDonors.toLocaleString('en-IN') },
-                { label: 'SIP Conversions', value: totalSIP.toLocaleString('en-IN') },
-                { label: 'Total Raised', value: fmt(totalAmt) },
-              ].map(s => (
-                <div key={s.label} className="bg-white/10 border border-white/20 rounded-2xl p-3 text-center">
-                  <div className="text-xl font-bold text-white">{s.value}</div>
-                  <div className="text-xs text-green-200 mt-0.5 leading-tight">{s.label}</div>
+                { icon: Users,  label: 'Donors Enrolled', value: totalDonors, color: 'text-green-300',  glow: 'shadow-green-500/20'  },
+                { icon: Target, label: 'SIP Conversions', value: totalSIP,    color: 'text-blue-300',   glow: 'shadow-blue-500/20'   },
+                { icon: Flame,  label: 'Total Raised',    value: null, fmtVal: fmt(totalAmt), color: 'text-orange-300', glow: 'shadow-orange-500/20' },
+                { icon: Zap,    label: 'Active Students', value: 180,         color: 'text-emerald-300',glow: 'shadow-emerald-500/20'},
+              ].map(({ icon: Icon, label, value, fmtVal, color, glow }) => (
+                <div key={label} className={`bg-white/6 border border-white/10 rounded-2xl p-4 text-center backdrop-blur-sm shadow-lg ${glow} hover:bg-white/10 transition-colors`}>
+                  <Icon className={`${color} mx-auto mb-1.5`} size={18} />
+                  <div className="text-xl font-black text-white leading-tight">
+                    {fmtVal ?? <CountUp target={value} duration={1600} />}
+                  </div>
+                  <div className="text-xs text-white/40 mt-0.5 leading-tight">{label}</div>
                 </div>
               ))}
             </div>

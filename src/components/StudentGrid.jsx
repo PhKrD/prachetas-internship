@@ -3,6 +3,14 @@ import { motion } from 'framer-motion'
 import { Search, SlidersHorizontal, Users } from 'lucide-react'
 import { studentsData, batchMeta } from '../data/studentsData'
 
+const getAchievement = (pct) => {
+  if (pct >= 90) return { emoji: '⭐', label: 'Star',   cls: 'bg-yellow-50 text-yellow-700 border-yellow-300', ring: 'ring-2 ring-yellow-400/60' }
+  if (pct >= 75) return { emoji: '🥇', label: 'Gold',   cls: 'bg-amber-50  text-amber-700  border-amber-300',  ring: 'ring-2 ring-amber-400/60'  }
+  if (pct >= 50) return { emoji: '🥈', label: 'Silver', cls: 'bg-slate-50  text-slate-600  border-slate-300',  ring: 'ring-2 ring-slate-400/50'  }
+  if (pct >= 25) return { emoji: '🥉', label: 'Bronze', cls: 'bg-orange-50 text-orange-700 border-orange-300', ring: 'ring-2 ring-orange-400/50' }
+  return           { emoji: '🌱', label: 'Rookie', cls: 'bg-green-50  text-green-700  border-green-200',  ring: ''                          }
+}
+
 const SORTS = [
   { key: 'donors', label: 'Donors ↓' },
   { key: 'sip',    label: 'SIP ↓'   },
@@ -22,17 +30,35 @@ const ProgressBar = ({ value, max, colorClass }) => {
 const StudentCard = ({ student, onSelect }) => {
   const batch = batchMeta.find(b => b.id === student.batch)
   const pct = Math.round((student.donorsCollected / student.donorTarget) * 100)
+  const achievement = getAchievement(pct)
   const fmt = (n) => n >= 1000 ? `₹${(n / 1000).toFixed(0)}K` : `₹${n}`
+  const sipRate = student.donorsCollected > 0
+    ? Math.round((student.sipConversions / student.donorsCollected) * 100) : 0
+  const isSipChamp = sipRate >= 40
+  const isAlmost   = pct >= 85 && pct < 100
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }} transition={{ duration: 0.4 }}
+      whileHover={{ y: -4 }}
       onClick={() => onSelect(student)}
-      className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-green-300 transition-all cursor-pointer group p-4"
+      className={`bg-white rounded-2xl border shadow-sm hover:shadow-lg transition-all cursor-pointer group p-4 relative ${achievement.ring} border-gray-200`}
     >
+      {/* Achievement badge — top-right */}
+      <div className={`absolute -top-2 -right-2 flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full border shadow-sm ${achievement.cls}`}>
+        {achievement.emoji} {achievement.label}
+      </div>
+
+      {/* Almost there ribbon */}
+      {isAlmost && (
+        <div className="absolute top-2 left-2 bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
+          🚀 Almost!
+        </div>
+      )}
+
       {/* Header */}
-      <div className="flex items-start gap-3 mb-3">
+      <div className="flex items-start gap-3 mb-3 mt-1">
         <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${batch.gradFrom} ${batch.gradTo} flex items-center justify-center flex-shrink-0 shadow-sm`}>
           <span className="text-white text-sm font-bold">
             {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
@@ -43,9 +69,10 @@ const StudentCard = ({ student, onSelect }) => {
             {student.name}
           </div>
           <div className="text-xs text-gray-400 mt-0.5">{student.rollNo}</div>
-          <span className={`inline-block text-xs font-semibold px-1.5 py-0.5 rounded-full mt-1 ${batch.badge}`}>
-            {batch.name}
-          </span>
+          <div className="flex items-center gap-1 mt-1 flex-wrap">
+            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${batch.badge}`}>{batch.name}</span>
+            {isSipChamp && <span className="text-xs font-semibold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">💎 SIP Champ</span>}
+          </div>
         </div>
       </div>
 
@@ -69,7 +96,7 @@ const StudentCard = ({ student, onSelect }) => {
       <div>
         <div className="flex justify-between text-xs text-gray-400 mb-1">
           <span>Donor progress</span>
-          <span className={`font-semibold ${pct >= 80 ? 'text-green-600' : pct >= 50 ? 'text-orange-500' : 'text-gray-500'}`}>
+          <span className={`font-bold ${pct >= 80 ? 'text-green-600' : pct >= 50 ? 'text-orange-500' : 'text-gray-500'}`}>
             {pct}%
           </span>
         </div>

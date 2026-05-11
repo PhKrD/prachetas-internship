@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
+import MotivationStrip from './components/MotivationStrip'
 import CampaignStats from './components/CampaignStats'
+import ImpactSection from './components/ImpactSection'
 import BatchOverview from './components/BatchOverview'
 import Leaderboard from './components/Leaderboard'
 import StudentGrid from './components/StudentGrid'
@@ -24,7 +26,10 @@ function App() {
       ) : (
         <>
           <Hero />
+          <MotivationStrip />
           <CampaignStats />
+          <ImpactSection />
+          <MotivationStrip />
           <BatchOverview activeBatch={activeBatch} onSelectBatch={setActiveBatch} />
           <Leaderboard onSelectStudent={setSelectedStudent} />
           <StudentGrid activeBatch={activeBatch} onSelectStudent={setSelectedStudent} />
