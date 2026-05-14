@@ -38,15 +38,19 @@ const fmt = (n) =>
   n >= 1000   ? `₹${(n / 1000).toFixed(1)}K`   : `₹${n}`
 
 const StudentProfile = ({ student, onBack }) => {
-  const batch = batchMeta.find(b => b.id === student.batch)
-  const sipRate = student.donorsCollected > 0
-    ? Math.round((student.sipConversions / student.donorsCollected) * 100)
+  const allStudents = useStudents()
+
+  // Always use the live version from context so donors update once fetched
+  const s = allStudents.find(x => x.id === student.id) ?? student
+
+  const batch = batchMeta.find(b => b.id === s.batch)
+  const sipRate = s.donorsCollected > 0
+    ? Math.round((s.sipConversions / s.donorsCollected) * 100)
     : 0
 
-  const allStudents = useStudents()
   const rank = [...allStudents]
     .sort((a, b) => b.donorsCollected - a.donorsCollected)
-    .findIndex(s => s.id === student.id) + 1
+    .findIndex(x => x.id === s.id) + 1
 
   const slug = student.slug
   const personalLink = `${BASE_DONATE_URL}?ref=${slug}`
@@ -97,15 +101,15 @@ const StudentProfile = ({ student, onBack }) => {
             {/* Avatar */}
             <div className="w-20 h-20 rounded-2xl bg-white/20 border-2 border-white/40 flex items-center justify-center flex-shrink-0">
               <span className="text-white text-2xl font-black">
-                {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                {s.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
               </span>
             </div>
 
             {/* Info */}
             <div className="flex-1">
-              <h1 className="text-2xl font-extrabold text-white mb-1">{student.name}</h1>
+              <h1 className="text-2xl font-extrabold text-white mb-1">{s.name}</h1>
               <div className="flex flex-wrap gap-2 text-sm">
-                <span className="bg-white/20 text-white px-3 py-1 rounded-full font-medium">{student.rollNo}</span>
+                <span className="bg-white/20 text-white px-3 py-1 rounded-full font-medium">{s.rollNo}</span>
                 <span className="bg-white/20 text-white px-3 py-1 rounded-full font-medium">{batch.name}</span>
               </div>
             </div>
@@ -124,10 +128,10 @@ const StudentProfile = ({ student, onBack }) => {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
         >
-          <StatCard icon={Users}        label="Donors Enrolled"     value={student.donorsCollected}          sub="donors supporting" iconBg="bg-green-100"  iconColor="text-green-700" />
-          <StatCard icon={Repeat}       label="SIP Conversions"     value={student.sipConversions}           sub={`${sipRate}% rate`}                iconBg="bg-blue-100"   iconColor="text-blue-700"  />
-          <StatCard icon={IndianRupee}  label="Total Raised"        value={fmt(student.totalAmountCollected)} sub="one-time donations"               iconBg="bg-orange-100" iconColor="text-orange-700"/>
-          <StatCard icon={CalendarCheck}label="Monthly SIP"         value={fmt(student.sipMonthlyAmount)}    sub="recurring / month"                iconBg="bg-violet-100" iconColor="text-violet-700"/>
+          <StatCard icon={Users}        label="Donors Enrolled"     value={s.donorsCollected}          sub="donors supporting" iconBg="bg-green-100"  iconColor="text-green-700" />
+          <StatCard icon={Repeat}       label="SIP Conversions"     value={s.sipConversions}           sub={`${sipRate}% rate`}                iconBg="bg-blue-100"   iconColor="text-blue-700"  />
+          <StatCard icon={IndianRupee}  label="Total Raised"        value={fmt(s.totalAmountCollected)} sub="one-time donations"               iconBg="bg-orange-100" iconColor="text-orange-700"/>
+          <StatCard icon={CalendarCheck}label="Monthly SIP"         value={fmt(s.sipMonthlyAmount)}    sub="recurring / month"                iconBg="bg-violet-100" iconColor="text-violet-700"/>
         </motion.div>
 
         {/* Progress section */}
@@ -141,8 +145,8 @@ const StudentProfile = ({ student, onBack }) => {
           </h2>
 
           <Bar
-            label={`SIP Conversion Rate (${student.sipConversions} of ${student.donorsCollected} donors)`}
-            pct={sipRate} value={student.sipConversions} max={student.donorsCollected}
+            label={`SIP Conversion Rate (${s.sipConversions} of ${s.donorsCollected} donors)`}
+            pct={sipRate} value={s.sipConversions} max={s.donorsCollected}
             barColor="bg-gradient-to-r from-blue-400 to-blue-600"
           />
         </motion.div>
@@ -218,9 +222,9 @@ const StudentProfile = ({ student, onBack }) => {
             <Receipt size={18} className="text-orange-500" /> Payment History
           </h2>
 
-          {student.donors && student.donors.length > 0 ? (
+          {s.donors && s.donors.length > 0 ? (
             <div className="space-y-3">
-              {student.donors.map((donor, idx) => (
+              {s.donors.map((donor, idx) => (
                 <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-sm">
@@ -253,7 +257,7 @@ const StudentProfile = ({ student, onBack }) => {
           className="bg-gradient-to-br from-green-700 to-green-900 rounded-2xl p-6 text-center shadow-lg"
         >
           <div className="text-white font-bold text-lg mb-1">
-            Support {student.name.split(' ')[0]}'s Campaign
+            Support {s.name.split(' ')[0]}'s Campaign
           </div>
           <p className="text-green-200 text-sm mb-4">
             Make a one-time donation or start a SIP to support Prachetas Foundation's mission.
@@ -263,7 +267,7 @@ const StudentProfile = ({ student, onBack }) => {
             target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-xl text-sm shadow hover:shadow-lg transition-all"
           >
-            Donate via {student.name.split(' ')[0]}'s Link <ExternalLink size={14} />
+            Donate via {s.name.split(' ')[0]}'s Link <ExternalLink size={14} />
           </a>
         </motion.div>
 
