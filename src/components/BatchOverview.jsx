@@ -116,7 +116,7 @@ const BatchOverview = ({ activeBatch, onSelectBatch }) => {
                           <div className="min-w-0 flex-1 flex items-center justify-between gap-1">
                             <span className={`text-xs font-semibold ${b.text} truncate`}>{s.name.split(' ')[0]}</span>
                             <div className="flex flex-col items-end flex-shrink-0">
-                              <span className="text-xs font-bold text-gray-700">{fmt(s.totalAmountCollected)}</span>
+                              <span className="text-xs font-bold text-gray-700">{fmt(s.totalAmountCollected)} <span className="text-[10px] text-red-500">({s.totalAmountCollected})</span></span>
                               <span className="text-[10px] text-blue-500">{s.sipConversions} SIP</span>
                             </div>
                           </div>
