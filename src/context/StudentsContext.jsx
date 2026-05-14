@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import { studentsData } from '../data/studentsData'
 
 const STATS_URL = 'https://prachetasfoundation.com/.netlify/functions/student-stats'
-const DONORS_URL = 'https://prachetasfoundation.com/.netlify/functions/student-donors'
 const OTHERS_URL = 'https://prachetasfoundation.com/.netlify/functions/fundraiser-links'
 
 const StudentsContext = createContext(null)
@@ -16,12 +15,13 @@ export const StudentsProvider = ({ children }) => {
   useEffect(() => {
     Promise.all([
       fetch(STATS_URL).then(r => r.json()).catch(() => ({ success: false })),
-      fetch(DONORS_URL).then(r => r.json()).catch(() => ({ success: false })),
       fetch(OTHERS_URL).then(r => r.json()).catch(() => ({ success: false })),
     ])
-      .then(([statsRes, donorsRes, othersRes]) => {
-        if (statsRes.success) setStatsMap(statsRes.stats)
-        if (donorsRes.success) setDonorsMap(donorsRes.donors)
+      .then(([statsRes, othersRes]) => {
+        if (statsRes.success) {
+          setStatsMap(statsRes.stats)
+          setDonorsMap(statsRes.donors || {})
+        }
         if (othersRes.success) {
           const otherStudents = othersRes.links
             .filter(link => link.showOnDashboard !== false)
