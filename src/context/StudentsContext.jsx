@@ -144,16 +144,18 @@ export const StudentsProvider = ({ children }) => {
   }
 
   const students = [
-    ...studentsData.map(s => ({
-      ...s,
-      ...(statsMap[s.slug] ?? {
-        donorsCollected:      0,
-        sipConversions:       0,
-        totalAmountCollected: 0,
-        sipMonthlyAmount:     0,
-      }),
-      donors: donorsMap[s.slug] || [],
-    })),
+    ...studentsData.map(s => {
+      const donors = donorsMap[s.slug] || []
+      const stats = statsMap[s.slug] || {}
+      return {
+        ...s,
+        donorsCollected: donors.length,
+        sipConversions: donors.filter(d => d.type === 'SIP').length,
+        totalAmountCollected: donors.reduce((sum, d) => sum + d.amount, 0),
+        sipMonthlyAmount: stats.sipMonthlyAmount || 0,
+        donors,
+      }
+    }),
     ...others,
   ]
 
