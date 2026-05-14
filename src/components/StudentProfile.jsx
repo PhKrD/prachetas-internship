@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Users, Repeat, IndianRupee, CalendarCheck, BadgeCheck, ExternalLink, Copy, Check, Eye, EyeOff, Link, Receipt } from 'lucide-react'
 import { batchMeta } from '../data/studentsData'
-import { useStudents } from '../context/StudentsContext'
+import { useStudents, useNeonStatus } from '../context/StudentsContext'
 
 const BASE_DONATE_URL = 'https://prachetasfoundation.com/donate'
 
@@ -39,6 +39,7 @@ const fmt = (n) =>
 
 const StudentProfile = ({ student, onBack }) => {
   const allStudents = useStudents()
+  const neonStatus = useNeonStatus()
 
   // Always use the live version from context so donors update once fetched
   const s = allStudents.find(x => x.id === student.id) ?? student
@@ -222,6 +223,7 @@ const StudentProfile = ({ student, onBack }) => {
             <Receipt size={18} className="text-orange-500" /> Payment History
           </h2>
 
+          <p className="text-xs text-gray-400 mb-3 font-mono">db:{neonStatus} · slug:{s.slug} · donors:{s.donors?.length ?? 0}</p>
           {s.donors && s.donors.length > 0 ? (
             <div className="space-y-3">
               {s.donors.map((donor, idx) => (

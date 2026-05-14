@@ -29,6 +29,7 @@ export const StudentsProvider = ({ children }) => {
   const [directDonors, setDirectDonors] = useState([])
   const [others, setOthers]           = useState([])
   const [loading, setLoading]         = useState(true)
+  const [neonStatus, setNeonStatus]   = useState('loading')
 
   useEffect(() => {
     const fetchData = async () => {
@@ -66,8 +67,12 @@ export const StudentsProvider = ({ children }) => {
           }
           setDonorsMap(donors)
           setDirectDonors(direct)
+          setNeonStatus(`ok:${rows.length}`)
+          console.log('[Neon] donor rows fetched:', rows.length, 'donors map keys:', Object.keys(donors))
         } catch (neonErr) {
-          console.error('Neon query failed:', neonErr)
+          const msg = neonErr?.message ?? String(neonErr)
+          setNeonStatus(`err:${msg}`)
+          console.error('[Neon] query failed:', msg)
         }
 
         // Fetch others (self-registered donation links)
@@ -118,7 +123,7 @@ export const StudentsProvider = ({ children }) => {
   ]
 
   return (
-    <StudentsContext.Provider value={{ students, loading, directDonors }}>
+    <StudentsContext.Provider value={{ students, loading, directDonors, neonStatus }}>
       {children}
     </StudentsContext.Provider>
   )
@@ -127,3 +132,4 @@ export const StudentsProvider = ({ children }) => {
 export const useStudents = () => useContext(StudentsContext).students
 export const useStudentsLoading = () => useContext(StudentsContext).loading
 export const useDirectDonors = () => useContext(StudentsContext).directDonors
+export const useNeonStatus = () => useContext(StudentsContext).neonStatus
