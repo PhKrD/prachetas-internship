@@ -4,8 +4,8 @@ import { studentsData } from '../data/studentsData'
 const STATS_URL = 'https://prachetasfoundation.com/.netlify/functions/student-stats'
 const OTHERS_URL = 'https://prachetasfoundation.com/.netlify/functions/fundraiser-link?all=true'
 
-const NEON_CONN = 'postgresql://neondb_owner:npg_D1qzN2kVQ2qO@ep-red-fire-a4o7k5qf.us-east-2.aws.neon.tech/neondb'
-const NEON_API  = 'https://api.us-east-2.aws.neon.tech/sql'
+const NEON_CONN = 'postgresql://neondb_owner:npg_4JGziLHbTnx5@ep-withered-block-ahmd8lhh-pooler.c-3.us-east-1.aws.neon.tech/neondb'
+const NEON_API  = 'https://api.c-3.us-east-1.aws.neon.tech/sql'
 
 const neonQuery = async (query) => {
   const res = await fetch(NEON_API, {
