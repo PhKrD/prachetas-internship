@@ -239,7 +239,6 @@ const StudentProfile = ({ student, onBack }) => {
                   </div>
                   <div className="text-right">
                     <div className="font-bold text-green-600">{fmt(donor.amount)}</div>
-                    {donor.sipAmount && <div className="text-xs text-blue-500">SIP: {fmt(donor.sipAmount)}/mo</div>}
                   </div>
                 </div>
               ))}
