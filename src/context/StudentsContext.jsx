@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import { studentsData } from '../data/studentsData'
 
 const STATS_URL = 'https://prachetasfoundation.com/.netlify/functions/student-stats'
+const DONATIONS_URL = 'https://prachetasfoundation.com/.netlify/functions/donations'
 const OTHERS_URL = 'https://prachetasfoundation.com/.netlify/functions/fundraiser-links'
 
 const StudentsContext = createContext(null)
@@ -20,7 +21,19 @@ export const StudentsProvider = ({ children }) => {
       .then(([statsRes, othersRes]) => {
         if (statsRes.success) {
           setStatsMap(statsRes.stats)
-          setDonorsMap(statsRes.donors || {})
+          // Fetch donors for each student that has stats
+          const slugs = Object.keys(statsRes.stats)
+          const donorPromises = slugs.map(slug =>
+            fetch(`${DONATIONS_URL}?slug=${slug}`)
+              .then(r => r.json())
+              .then(res => res.success ? { slug, donors: res.donors } : { slug, donors: [] })
+              .catch(() => ({ slug, donors: [] }))
+          )
+          Promise.all(donorPromises).then(results => {
+            const donors = {}
+            results.forEach(r => donors[r.slug] = r.donors)
+            setDonorsMap(donors)
+          })
         }
         if (othersRes.success) {
           const otherStudents = othersRes.links
