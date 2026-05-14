@@ -11,7 +11,6 @@ const neonQuery = async (query) => {
   const res = await fetch(NEON_API, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json; charset=utf-8',
       'Neon-Connection-String': NEON_CONN,
     },
     body: JSON.stringify({ query, params: [] }),
