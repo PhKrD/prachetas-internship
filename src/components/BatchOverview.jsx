@@ -56,11 +56,7 @@ const BatchOverview = ({ activeBatch, onSelectBatch }) => {
       donorTarget: bStudents.length * 100,
       top3,
     }
-  }).sort((a, b) => {
-    const pctA = a.donors / a.donorTarget
-    const pctB = b.donors / b.donorTarget
-    return pctB - pctA
-  }).map((b, i) => ({ ...b, rank: i + 1 }))
+  }).sort((a, b) => b.amount - a.amount).map((b, i) => ({ ...b, rank: i + 1 }))
 
   const fmt = (n) =>
     n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` :
