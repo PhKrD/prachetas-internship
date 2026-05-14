@@ -46,7 +46,7 @@ const BatchOverview = ({ activeBatch, onSelectBatch }) => {
   const students = useStudents()
   const batchStats = batchMetaOnly.map(b => {
     const bStudents = students.filter(s => s.batch === b.id)
-    const top3 = [...bStudents].sort((a, b) => b.donorsCollected - a.donorsCollected).slice(0, 3)
+    const top3 = [...bStudents].sort((a, b) => b.totalAmountCollected - a.totalAmountCollected).slice(0, 3)
     return {
       ...b,
       count:   bStudents.length,
