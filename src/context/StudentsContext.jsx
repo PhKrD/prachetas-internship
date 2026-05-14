@@ -20,8 +20,12 @@ export const StudentsProvider = ({ children }) => {
       fetch(OTHERS_URL).then(r => r.json()).catch(() => ({ success: false })),
     ])
       .then(([statsRes, donorsRes, othersRes]) => {
+        console.log('Donors response:', donorsRes)
         if (statsRes.success) setStatsMap(statsRes.stats)
-        if (donorsRes.success) setDonorsMap(donorsRes.donors)
+        if (donorsRes.success) {
+          console.log('Donors map:', donorsRes.donors)
+          setDonorsMap(donorsRes.donors)
+        }
         if (othersRes.success) {
           const otherStudents = othersRes.links
             .filter(link => link.showOnDashboard !== false)
