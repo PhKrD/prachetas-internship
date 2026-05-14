@@ -1,9 +1,13 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import { neon } from '@neondatabase/serverless'
 import { studentsData } from '../data/studentsData'
 
 const STATS_URL = 'https://prachetasfoundation.com/.netlify/functions/student-stats'
-const DONATIONS_URL = 'https://prachetasfoundation.com/.netlify/functions/donations'
 const OTHERS_URL = 'https://prachetasfoundation.com/.netlify/functions/fundraiser-links'
+
+const NEON_DATABASE_URL = 'postgresql://neondb_owner:npg_D1qzN2kVQ2qO@ep-red-fire-a4o7k5qf.us-east-2.aws.neon.tech/neondb?sslmode=require'
+
+const sql = neon(NEON_DATABASE_URL)
 
 const StudentsContext = createContext(null)
 
@@ -14,27 +18,46 @@ export const StudentsProvider = ({ children }) => {
   const [loading, setLoading]   = useState(true)
 
   useEffect(() => {
-    Promise.all([
-      fetch(STATS_URL).then(r => r.json()).catch(() => ({ success: false })),
-      fetch(OTHERS_URL).then(r => r.json()).catch(() => ({ success: false })),
-    ])
-      .then(([statsRes, othersRes]) => {
+    const fetchData = async () => {
+      try {
+        // Fetch stats from existing endpoint
+        const statsRes = await fetch(STATS_URL).then(r => r.json()).catch(() => ({ success: false }))
         if (statsRes.success) {
           setStatsMap(statsRes.stats)
-          // Fetch donors for each student that has stats
-          const slugs = Object.keys(statsRes.stats)
-          const donorPromises = slugs.map(slug =>
-            fetch(`${DONATIONS_URL}?slug=${slug}`)
-              .then(r => r.json())
-              .then(res => res.success ? { slug, donors: res.donors } : { slug, donors: [] })
-              .catch(() => ({ slug, donors: [] }))
-          )
-          Promise.all(donorPromises).then(results => {
-            const donors = {}
-            results.forEach(r => donors[r.slug] = r.donors)
-            setDonorsMap(donors)
+        }
+
+        // Fetch donors directly from Neon
+        const donorRows = await sql`
+          SELECT
+            referred_by,
+            donor_name,
+            amount,
+            subscription_id,
+            subscription_amount,
+            created_at
+          FROM donations
+          WHERE referred_by IS NOT NULL
+            AND status = 'completed'
+          ORDER BY created_at DESC
+        `
+
+        const donors = {}
+        for (const row of donorRows) {
+          if (!donors[row.referred_by]) {
+            donors[row.referred_by] = []
+          }
+          donors[row.referred_by].push({
+            name: row.donor_name || 'Anonymous',
+            amount: Number(row.amount),
+            date: new Date(row.created_at).toISOString().split('T')[0],
+            type: row.subscription_id ? 'SIP' : 'One-time',
+            sipAmount: row.subscription_amount ? Number(row.subscription_amount) : null,
           })
         }
+        setDonorsMap(donors)
+
+        // Fetch others
+        const othersRes = await fetch(OTHERS_URL).then(r => r.json()).catch(() => ({ success: false }))
         if (othersRes.success) {
           const otherStudents = othersRes.links
             .filter(link => link.showOnDashboard !== false)
@@ -49,12 +72,18 @@ export const StudentsProvider = ({ children }) => {
               sipConversions: link.sipConversions || 0,
               totalAmountCollected: link.totalAmountCollected || 0,
               sipMonthlyAmount: link.sipMonthlyAmount || 0,
-              donors: link.donors || [],
+              donors: donors[link.slug] || [],
             }))
           setOthers(otherStudents)
         }
-      })
-      .finally(() => setLoading(false))
+      } catch (err) {
+        console.error('Error fetching data:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
   }, [])
 
   const students = [
