@@ -3,6 +3,7 @@ import { studentsData } from '../data/studentsData'
 
 const STATS_URL = 'https://prachetasfoundation.com/.netlify/functions/student-stats'
 const OTHERS_URL = 'https://prachetasfoundation.com/.netlify/functions/fundraiser-link?all=true'
+const DIRECT_DONATIONS_URL = 'https://prachetasfoundation.com/.netlify/functions/direct-donations'
 
 const NEON_CONN = 'postgresql://neondb_owner:npg_4JGziLHbTnx5@ep-withered-block-ahmd8lhh-pooler.c-3.us-east-1.aws.neon.tech/neondb'
 const NEON_API  = 'https://api.c-3.us-east-1.aws.neon.tech/sql'
@@ -26,6 +27,8 @@ export const StudentsProvider = ({ children }) => {
   const [statsMap, setStatsMap]       = useState({})
   const [donorsMap, setDonorsMap]     = useState({})
   const [directDonors, setDirectDonors] = useState([])
+  const [directDonorsLoading, setDirectDonorsLoading] = useState(false)
+  const [directDonorsError, setDirectDonorsError] = useState('')
   const [others, setOthers]           = useState([])
   const [loading, setLoading]         = useState(true)
 
@@ -40,14 +43,16 @@ export const StudentsProvider = ({ children }) => {
           setStatsMap(statsData)
         }
 
-        // Fetch donor details + direct donations from Neon via HTTP API
+        // Fetch donor details from Neon via HTTP API
         let donors = {}
         try {
           const rows = await neonQuery(
             `SELECT referred_by, donor_name, amount, subscription_id, created_at
-             FROM donations WHERE status = 'completed' ORDER BY created_at DESC`
+             FROM donations
+             WHERE status = 'completed'
+               AND referred_by IS NOT NULL
+             ORDER BY created_at DESC`
           )
-          const direct = []
           for (const row of rows) {
             const entry = {
               name:   row.donor_name || 'Anonymous',
@@ -55,15 +60,10 @@ export const StudentsProvider = ({ children }) => {
               date:   new Date(row.created_at).toISOString().split('T')[0],
               type:   row.subscription_id ? 'SIP' : 'One-time',
             }
-            if (row.referred_by) {
-              if (!donors[row.referred_by]) donors[row.referred_by] = []
-              donors[row.referred_by].push(entry)
-            } else {
-              direct.push(entry)
-            }
+            if (!donors[row.referred_by]) donors[row.referred_by] = []
+            donors[row.referred_by].push(entry)
           }
           setDonorsMap(donors)
-          setDirectDonors(direct)
         } catch (neonErr) {
           const msg = neonErr?.message ?? String(neonErr)
           console.error('[Neon] query failed:', msg)
@@ -102,6 +102,40 @@ export const StudentsProvider = ({ children }) => {
     fetchData()
   }, [])
 
+  const fetchDirectDonors = async (password) => {
+    const cleaned = (password || '').trim()
+    if (!cleaned) {
+      setDirectDonorsError('Please enter password')
+      return false
+    }
+
+    setDirectDonorsLoading(true)
+    setDirectDonorsError('')
+
+    try {
+      const res = await fetch(DIRECT_DONATIONS_URL, {
+        method: 'GET',
+        headers: { 'x-direct-password': cleaned },
+      })
+      const data = await res.json().catch(() => ({ success: false, error: 'Invalid server response' }))
+
+      if (!res.ok || !data.success) {
+        setDirectDonorsError(data.error || 'Access denied')
+        setDirectDonors([])
+        return false
+      }
+
+      setDirectDonors(Array.isArray(data.donors) ? data.donors : [])
+      return true
+    } catch (_) {
+      setDirectDonorsError('Unable to load direct donations')
+      setDirectDonors([])
+      return false
+    } finally {
+      setDirectDonorsLoading(false)
+    }
+  }
+
   const students = [
     ...studentsData.map(s => ({
       ...s,
@@ -117,7 +151,14 @@ export const StudentsProvider = ({ children }) => {
   ]
 
   return (
-    <StudentsContext.Provider value={{ students, loading, directDonors }}>
+    <StudentsContext.Provider value={{
+      students,
+      loading,
+      directDonors,
+      directDonorsLoading,
+      directDonorsError,
+      fetchDirectDonors,
+    }}>
       {children}
     </StudentsContext.Provider>
   )
@@ -126,3 +167,6 @@ export const StudentsProvider = ({ children }) => {
 export const useStudents = () => useContext(StudentsContext).students
 export const useStudentsLoading = () => useContext(StudentsContext).loading
 export const useDirectDonors = () => useContext(StudentsContext).directDonors
+export const useDirectDonorsLoading = () => useContext(StudentsContext).directDonorsLoading
+export const useDirectDonorsError = () => useContext(StudentsContext).directDonorsError
+export const useFetchDirectDonors = () => useContext(StudentsContext).fetchDirectDonors

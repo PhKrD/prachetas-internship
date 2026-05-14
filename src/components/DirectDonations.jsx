@@ -1,6 +1,12 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Heart, IndianRupee } from 'lucide-react'
-import { useDirectDonors } from '../context/StudentsContext'
+import {
+  useDirectDonors,
+  useDirectDonorsLoading,
+  useDirectDonorsError,
+  useFetchDirectDonors,
+} from '../context/StudentsContext'
 
 const fmt = (n) =>
   n >= 100000 ? `₹${(n / 100000).toFixed(2)}L` :
@@ -8,7 +14,72 @@ const fmt = (n) =>
 
 const DirectDonations = () => {
   const donors = useDirectDonors()
-  if (!donors || donors.length === 0) return null
+  const loading = useDirectDonorsLoading()
+  const error = useDirectDonorsError()
+  const fetchDirectDonors = useFetchDirectDonors()
+
+  const [password, setPassword] = useState('')
+  const [unlocked, setUnlocked] = useState(false)
+
+  const onUnlock = async (e) => {
+    e.preventDefault()
+    const ok = await fetchDirectDonors(password)
+    if (ok) {
+      setUnlocked(true)
+      setPassword('')
+    }
+  }
+
+  if (!unlocked) {
+    return (
+      <section className="py-14 px-4 sm:px-6 lg:px-8 bg-white border-b border-gray-100">
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-2">
+              <Heart size={20} className="text-rose-500" /> Direct Donations (Protected)
+            </h2>
+            <p className="text-sm text-gray-500 mb-4">
+              Enter password to view direct-donation donor list.
+            </p>
+
+            <form onSubmit={onUnlock} className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400"
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-5 py-2.5 rounded-xl bg-rose-600 text-white font-semibold hover:bg-rose-700 disabled:opacity-60"
+              >
+                {loading ? 'Checking...' : 'Unlock'}
+              </button>
+            </form>
+
+            {error && <p className="text-sm text-red-600 mt-3">{error}</p>}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (!donors || donors.length === 0) {
+    return (
+      <section className="py-14 px-4 sm:px-6 lg:px-8 bg-white border-b border-gray-100">
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-2">
+              <Heart size={20} className="text-rose-500" /> Direct Donations
+            </h2>
+            <p className="text-sm text-gray-500">No direct donations found right now.</p>
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   const total = donors.reduce((s, d) => s + d.amount, 0)
 
