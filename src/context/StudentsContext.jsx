@@ -32,6 +32,8 @@ export const StudentsProvider = ({ children }) => {
   const [others, setOthers]           = useState([])
   const [loading, setLoading]         = useState(true)
 
+  const coreStudentSlugs = new Set(studentsData.map(s => s.slug))
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -73,7 +75,12 @@ export const StudentsProvider = ({ children }) => {
         const othersRes = await fetch(OTHERS_URL).then(r => r.json()).catch(() => ({ success: false }))
         if (othersRes.success && othersRes.links) {
           const otherStudents = othersRes.links
-            .filter(link => link.show_on_dashboard !== false && link.is_active !== false)
+            .filter(link => (
+              link.show_on_dashboard !== false &&
+              link.is_active !== false &&
+              link.slug &&
+              !coreStudentSlugs.has(link.slug)
+            ))
             .map((link, idx) => {
               const s = statsData[link.slug] || {}
               return {
