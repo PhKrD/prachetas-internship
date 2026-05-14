@@ -9,9 +9,10 @@ const fmt = (n) =>
 
 const CampaignStats = () => {
   const students     = useStudents()
+  const mainBatchStudents = students.filter(s => s.batch >= 1 && s.batch <= 4)
   const totalDonors  = students.reduce((s, x) => s + x.donorsCollected, 0)
   const totalSIP     = students.reduce((s, x) => s + x.sipConversions, 0)
-  const totalAmt     = students.reduce((s, x) => s + x.totalAmountCollected, 0)
+  const totalAmt     = mainBatchStudents.reduce((s, x) => s + x.totalAmountCollected, 0)
   const totalMonthly = students.reduce((s, x) => s + x.sipMonthlyAmount, 0)
 
   const cards = [
