@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Search, SlidersHorizontal, Users } from 'lucide-react'
-import { batchMeta } from '../data/studentsData'
+import { batchMeta, getBatchMeta } from '../data/studentsData'
 import { useStudents } from '../context/StudentsContext'
 
 const getAchievement = (pct) => {
@@ -104,6 +104,7 @@ const StudentGrid = ({ activeBatch, onSelectStudent, onSelectBatch }) => {
   const students = useStudents()
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('donors')
+  const displayBatchMeta = getBatchMeta(students)
 
   const filtered = useMemo(() => {
     let list = activeBatch ? students.filter(s => s.batch === activeBatch) : students
@@ -120,9 +121,9 @@ const StudentGrid = ({ activeBatch, onSelectStudent, onSelectBatch }) => {
       if (sortBy === 'amount') return b.totalAmountCollected - a.totalAmountCollected
       return a.name.localeCompare(b.name)
     })
-  }, [activeBatch, search, sortBy])
+  }, [activeBatch, search, sortBy, students])
 
-  const activeMeta = activeBatch ? batchMeta.find(b => b.id === activeBatch) : null
+  const activeMeta = activeBatch ? displayBatchMeta.find(b => b.id === activeBatch) : null
 
   if (!activeBatch) {
     return (
@@ -135,7 +136,7 @@ const StudentGrid = ({ activeBatch, onSelectStudent, onSelectBatch }) => {
             <p className="text-gray-500 text-sm mt-1">Select a batch to explore its students</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {batchMeta.map((b, i) => (
+            {displayBatchMeta.map((b, i) => (
               <motion.div
                 key={b.id}
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}

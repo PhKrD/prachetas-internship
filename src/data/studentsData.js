@@ -76,10 +76,6 @@ const rawBatches = [
     'Mitali Rohan Bhindwale','Aryan Ganesh Kale','Ruturaj Rushikesh Dhotre',
     'Avishkar Karande','Pransh Govind Chandak',
   ],
-  /* Batch 5 (Others) */ [
-    'Rahul Sharma','Priya Patel','Amit Kumar','Neha Singh','Vikram Reddy',
-    'Sneha Joshi','Arjun Mehta','Kavita Nair','Rohan Das','Pooja Verma',
-  ],
 ]
 
 /* Build flat list */
@@ -106,30 +102,22 @@ const rawWithSlugs = rawList.map(s => {
 })
 
 /* Assign IDs and roll numbers — stats start at 0, real data fetched from Neon DB */
-const batchCounters = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
-export const studentsData = rawWithSlugs.map((s, i) => {
+const batchCounters = { 1: 0, 2: 0, 3: 0, 4: 0 }
+export const studentsData = rawWithSlugs.slice(0, rawWithSlugs.length - 10).map((s, i) => {
   batchCounters[s.batch]++
   const pos = batchCounters[s.batch]
-  
-  // Add sample donor data for first 5 students in each batch for testing
-  const sampleDonors = (i < 5) ? [
-    { name: 'John Doe', amount: 5000, date: '2024-01-15', type: 'One-time' },
-    { name: 'Jane Smith', amount: 10000, date: '2024-02-10', type: 'SIP', sipAmount: 1000 },
-    { name: 'Mike Johnson', amount: 2500, date: '2024-03-05', type: 'One-time' },
-  ] : []
-
   return {
     id:                   i + 1,
     name:                 s.name,
     batch:                s.batch,
     slug:                 s.slug,
-    rollNo:               s.batch === 5 ? `OTHER-${String(pos).padStart(2, '0')}` : `COEP-B${s.batch}-${String(pos).padStart(2, '0')}`,
-    donorsCollected:      sampleDonors.length,
+    rollNo:               `COEP-B${s.batch}-${String(pos).padStart(2, '0')}`,
+    donorsCollected:      0,
     donorTarget:          100,
-    sipConversions:       sampleDonors.filter(d => d.type === 'SIP').length,
-    totalAmountCollected: sampleDonors.reduce((sum, d) => sum + d.amount, 0),
-    sipMonthlyAmount:     sampleDonors.filter(d => d.sipAmount).reduce((sum, d) => sum + d.sipAmount, 0),
-    donors:               sampleDonors, // Array of { name, amount, date, type }
+    sipConversions:       0,
+    totalAmountCollected: 0,
+    sipMonthlyAmount:     0,
+    donors:               [],
   }
 })
 
@@ -140,3 +128,8 @@ export const batchMeta = [
   { id:4, name:'Batch 4', gradFrom:'from-violet-400', gradTo:'to-violet-600', lightBg:'bg-violet-50', border:'border-violet-200', text:'text-violet-700', badge:'bg-violet-100 text-violet-800', ring:'ring-violet-400' },
   { id:5, name:'Others',  gradFrom:'from-gray-400',    gradTo:'to-gray-600',    lightBg:'bg-gray-50',    border:'border-gray-200',    text:'text-gray-700',    badge:'bg-gray-100 text-gray-800',    ring:'ring-gray-400'    },
 ]
+
+export const getBatchMeta = (students) => {
+  const hasOthers = students.some(s => s.batch === 5)
+  return hasOthers ? batchMeta : batchMeta.slice(0, 4)
+}
