@@ -25,7 +25,10 @@ const Leaderboard = ({ onSelectStudent }) => {
   const students = useStudents()
   const [tab, setTab] = useState('donors')
   const current = TABS.find(t => t.key === tab)
-  const top = [...students].sort((a, b) => b[current.field] - a[current.field]).slice(0, 10)
+  const top = [...students]
+    .filter(s => s.batch >= 1 && s.batch <= 4)
+    .sort((a, b) => b[current.field] - a[current.field])
+    .slice(0, 10)
 
   const getBatch = (id) => batchMeta.find(b => b.id === id)
 
