@@ -103,7 +103,7 @@ const rawWithSlugs = rawList.map(s => {
 
 /* Assign IDs and roll numbers — stats start at 0, real data fetched from Neon DB */
 const batchCounters = { 1: 0, 2: 0, 3: 0, 4: 0 }
-export const studentsData = rawWithSlugs.slice(0, rawWithSlugs.length - 10).map((s, i) => {
+export const studentsData = rawWithSlugs.map((s, i) => {
   batchCounters[s.batch]++
   const pos = batchCounters[s.batch]
   return {

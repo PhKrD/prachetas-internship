@@ -3,7 +3,7 @@ import { neon } from '@neondatabase/serverless'
 import { studentsData } from '../data/studentsData'
 
 const STATS_URL = 'https://prachetasfoundation.com/.netlify/functions/student-stats'
-const OTHERS_URL = 'https://prachetasfoundation.com/.netlify/functions/fundraiser-links'
+const OTHERS_URL = 'https://prachetasfoundation.com/.netlify/functions/fundraiser-link?all=true'
 
 const NEON_DATABASE_URL = 'postgresql://neondb_owner:npg_D1qzN2kVQ2qO@ep-red-fire-a4o7k5qf.us-east-2.aws.neon.tech/neondb?sslmode=require'
 
@@ -21,59 +21,65 @@ export const StudentsProvider = ({ children }) => {
     const fetchData = async () => {
       try {
         // Fetch stats from existing endpoint
+        let statsData = {}
         const statsRes = await fetch(STATS_URL).then(r => r.json()).catch(() => ({ success: false }))
         if (statsRes.success) {
-          setStatsMap(statsRes.stats)
+          statsData = statsRes.stats
+          setStatsMap(statsData)
         }
 
         // Fetch donors directly from Neon
-        const donorRows = await sql`
-          SELECT
-            referred_by,
-            donor_name,
-            amount,
-            subscription_id,
-            subscription_amount,
-            created_at
-          FROM donations
-          WHERE referred_by IS NOT NULL
-            AND status = 'completed'
-          ORDER BY created_at DESC
-        `
-
-        const donors = {}
-        for (const row of donorRows) {
-          if (!donors[row.referred_by]) {
-            donors[row.referred_by] = []
+        let donors = {}
+        try {
+          const donorRows = await sql`
+            SELECT
+              referred_by,
+              donor_name,
+              amount,
+              subscription_id,
+              subscription_amount,
+              created_at
+            FROM donations
+            WHERE referred_by IS NOT NULL
+              AND status = 'completed'
+            ORDER BY created_at DESC
+          `
+          for (const row of donorRows) {
+            if (!donors[row.referred_by]) donors[row.referred_by] = []
+            donors[row.referred_by].push({
+              name: row.donor_name || 'Anonymous',
+              amount: Number(row.amount),
+              date: new Date(row.created_at).toISOString().split('T')[0],
+              type: row.subscription_id ? 'SIP' : 'One-time',
+              sipAmount: row.subscription_amount ? Number(row.subscription_amount) : null,
+            })
           }
-          donors[row.referred_by].push({
-            name: row.donor_name || 'Anonymous',
-            amount: Number(row.amount),
-            date: new Date(row.created_at).toISOString().split('T')[0],
-            type: row.subscription_id ? 'SIP' : 'One-time',
-            sipAmount: row.subscription_amount ? Number(row.subscription_amount) : null,
-          })
+          setDonorsMap(donors)
+        } catch (neonErr) {
+          console.error('Neon direct query failed:', neonErr)
         }
-        setDonorsMap(donors)
 
-        // Fetch others
+        // Fetch others (self-registered donation links)
         const othersRes = await fetch(OTHERS_URL).then(r => r.json()).catch(() => ({ success: false }))
-        if (othersRes.success) {
+        if (othersRes.success && othersRes.links) {
           const otherStudents = othersRes.links
-            .filter(link => link.showOnDashboard !== false)
-            .map((link, idx) => ({
-              id: studentsData.length + idx + 1,
-              name: link.name || 'Anonymous',
-              batch: 5,
-              slug: link.slug,
-              rollNo: `OTHER-${String(idx + 1).padStart(2, '0')}`,
-              donorsCollected: link.donorsCollected || 0,
-              donorTarget: 100,
-              sipConversions: link.sipConversions || 0,
-              totalAmountCollected: link.totalAmountCollected || 0,
-              sipMonthlyAmount: link.sipMonthlyAmount || 0,
-              donors: donors[link.slug] || [],
-            }))
+            .filter(link => link.show_on_dashboard !== false && link.is_active !== false)
+            .map((link, idx) => {
+              const s = statsData[link.slug] || {}
+              return {
+                id: studentsData.length + idx + 1,
+                name: link.student_name || 'Anonymous',
+                batch: 5,
+                slug: link.slug,
+                rollNo: link.roll_no || `OTHER-${String(idx + 1).padStart(2, '0')}`,
+                donorsCollected:      s.donorsCollected      || 0,
+                donorTarget:          100,
+                sipConversions:       s.sipConversions       || 0,
+                totalAmountCollected: s.totalAmountCollected || 0,
+                sipMonthlyAmount:     s.sipMonthlyAmount     || 0,
+                donors: donors[link.slug] || [],
+              }
+            })
           setOthers(otherStudents)
         }
       } catch (err) {

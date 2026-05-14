@@ -3,6 +3,8 @@ import { batchMeta } from '../data/studentsData'
 import { useStudents } from '../context/StudentsContext'
 import { Crown, Medal } from 'lucide-react'
 
+const batchMetaOnly = batchMeta.filter(b => b.id <= 4)
+
 const ProgressBar = ({ value, max, colorClass }) => {
   const pct = Math.min(100, Math.round((value / max) * 100))
   return (
@@ -42,7 +44,7 @@ const RankBadge = ({ rank }) => {
 
 const BatchOverview = ({ activeBatch, onSelectBatch }) => {
   const students = useStudents()
-  const batchStats = batchMeta.map(b => {
+  const batchStats = batchMetaOnly.map(b => {
     const bStudents = students.filter(s => s.batch === b.id)
     const top3 = [...bStudents].sort((a, b) => b.donorsCollected - a.donorsCollected).slice(0, 3)
     return {
