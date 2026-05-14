@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Search, SlidersHorizontal, Users } from 'lucide-react'
-import { studentsData, batchMeta } from '../data/studentsData'
+import { batchMeta } from '../data/studentsData'
+import { useStudents } from '../context/StudentsContext'
 
 const getAchievement = (pct) => {
   if (pct >= 90) return { emoji: '⭐', label: 'Star',   cls: 'bg-yellow-50 text-yellow-700 border-yellow-300', ring: 'ring-2 ring-yellow-400/60' }
@@ -92,32 +93,25 @@ const StudentCard = ({ student, onSelect }) => {
         </div>
       </div>
 
-      {/* Progress */}
-      <div>
-        <div className="flex justify-between text-xs text-gray-400 mb-1">
-          <span>Donor progress</span>
-          <span className={`font-bold ${pct >= 80 ? 'text-green-600' : pct >= 50 ? 'text-orange-500' : 'text-gray-500'}`}>
-            {pct}%
-          </span>
-        </div>
-        <ProgressBar value={student.donorsCollected} max={student.donorTarget} colorClass={`bg-gradient-to-r ${batch.gradFrom} ${batch.gradTo}`} />
+      <div className={`text-xs font-medium ${batch.text} mt-1`}>
+        {student.totalAmountCollected > 0 ? `₹${student.totalAmountCollected.toLocaleString('en-IN')} raised` : 'No donations yet'}
       </div>
     </motion.div>
   )
 }
 
-const StudentGrid = ({ activeBatch, onSelectStudent }) => {
+const StudentGrid = ({ activeBatch, onSelectStudent, onSelectBatch }) => {
+  const students = useStudents()
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('donors')
 
   const filtered = useMemo(() => {
-    let list = activeBatch ? studentsData.filter(s => s.batch === activeBatch) : studentsData
+    let list = activeBatch ? students.filter(s => s.batch === activeBatch) : students
     if (search.trim()) {
       const q = search.toLowerCase()
       list = list.filter(s =>
         s.name.toLowerCase().includes(q) ||
-        s.rollNo.toLowerCase().includes(q) ||
-        s.department.toLowerCase().includes(q)
+        s.rollNo.toLowerCase().includes(q)
       )
     }
     return [...list].sort((a, b) => {
@@ -130,6 +124,43 @@ const StudentGrid = ({ activeBatch, onSelectStudent }) => {
 
   const activeMeta = activeBatch ? batchMeta.find(b => b.id === activeBatch) : null
 
+  if (!activeBatch) {
+    return (
+      <section id="students" className="py-14 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+              <Users size={22} className="text-green-700" /> Students
+            </h2>
+            <p className="text-gray-500 text-sm mt-1">Select a batch to explore its students</p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {batchMeta.map((b, i) => (
+              <motion.div
+                key={b.id}
+                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: i * 0.08 }}
+                onClick={() => onSelectBatch(b.id)}
+                className={`bg-white rounded-2xl border-2 border-gray-200 shadow-sm p-6 cursor-pointer hover:shadow-md hover:scale-[1.02] transition-all group`}
+              >
+                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${b.gradFrom} ${b.gradTo} flex items-center justify-center mb-4 shadow-md group-hover:scale-110 transition-transform`}>
+                  <span className="text-white font-black text-xl">B{b.id}</span>
+                </div>
+                <div className={`text-lg font-extrabold ${b.text} mb-1`}>{b.name}</div>
+                <div className="text-gray-400 text-sm">
+                  {students.filter(s => s.batch === b.id).length} students
+                </div>
+                <div className={`mt-4 text-xs font-semibold ${b.text} flex items-center gap-1`}>
+                  View students →
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section id="students" className="py-14 px-4 sm:px-6 lg:px-8 bg-gray-50">
       <div className="max-w-7xl mx-auto">
@@ -138,37 +169,42 @@ const StudentGrid = ({ activeBatch, onSelectStudent }) => {
           <div>
             <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
               <Users size={22} className="text-green-700" />
-              All Students
-              {activeMeta && (
-                <span className={`text-sm font-semibold px-2 py-0.5 rounded-full ${activeMeta.badge}`}>
-                  {activeMeta.name}
-                </span>
-              )}
+              {activeMeta?.name || 'All Students'}
             </h2>
-            <p className="text-sm text-gray-500 mt-0.5">{filtered.length} students shown</p>
+            <p className="text-gray-500 text-sm mt-1">
+              {activeMeta ? `${activeMeta.count} students in ${activeMeta.name}` : 'All students across all batches'}
+            </p>
+          </div>
+          {activeBatch && (
+            <button
+              onClick={() => onSelectBatch(null)}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl text-sm transition-colors"
+            >
+              ← Back to all batches
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap gap-2 items-center">
+          {/* Search */}
+          <div className="relative">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text" placeholder="Search name, roll no…" value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="pl-8 pr-3 py-2 text-sm rounded-xl border border-gray-300 bg-white outline-none focus:border-green-500 focus:ring-1 focus:ring-green-300 w-44"
+            />
           </div>
 
-          <div className="flex flex-wrap gap-2 items-center">
-            {/* Search */}
-            <div className="relative">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text" placeholder="Search name, roll no…" value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="pl-8 pr-3 py-2 text-sm rounded-xl border border-gray-300 bg-white outline-none focus:border-green-500 focus:ring-1 focus:ring-green-300 w-44"
-              />
-            </div>
-
-            {/* Sort */}
-            <div className="flex items-center gap-1 bg-white rounded-xl border border-gray-300 px-2 py-2">
-              <SlidersHorizontal size={14} className="text-gray-400 flex-shrink-0" />
-              <select
-                value={sortBy} onChange={e => setSortBy(e.target.value)}
-                className="text-sm text-gray-700 outline-none bg-transparent"
-              >
-                {SORTS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-              </select>
-            </div>
+          {/* Sort */}
+          <div className="flex items-center gap-1 bg-white rounded-xl border border-gray-300 px-2 py-2">
+            <SlidersHorizontal size={14} className="text-gray-400 flex-shrink-0" />
+            <select
+              value={sortBy} onChange={e => setSortBy(e.target.value)}
+              className="text-sm text-gray-700 outline-none bg-transparent"
+            >
+              {SORTS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+            </select>
           </div>
         </div>
 

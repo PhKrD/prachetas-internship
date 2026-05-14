@@ -3,14 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Quote } from 'lucide-react'
 
 const QUOTES = [
-  { text: "Every ₹100 you collect creates a ripple that changes lives forever.", by: "Prachetas Foundation" },
-  { text: "You are not just fundraising — you are engineering a better tomorrow.", by: "COEP Internship 2025" },
-  { text: "180 engineers. One mission. Infinite impact.", by: "Campaign Motto" },
-  { text: "The best way to find yourself is to lose yourself in the service of others.", by: "Mahatma Gandhi" },
-  { text: "Your target is 100 donors. But your potential is truly limitless.", by: "Campaign Team" },
-  { text: "Small acts, when multiplied by millions of people, can transform the world.", by: "Howard Zinn" },
-  { text: "A nation's greatness is measured by how it treats its most vulnerable citizens.", by: "Mahatma Gandhi" },
-  { text: "Don't wait for someone else to change the world. You are that someone.", by: "Prachetas Foundation" },
+  { text: "A generation that contributes together can transform the future together.", by: "Prachetas Foundation" },
+  { text: "Young minds. Shared responsibility. Lasting impact.", by: "COEP Internship 2026" },
+  { text: "More than fundraising — this is a movement for a better tomorrow.", by: "Campaign Motto" },
+  { text: "Together, we are not just supporting a cause; we are shaping the future.", by: "Prachetas Foundation" },
+  { text: "Every meal served is a reminder that compassion can nourish both people and the planet.", by: "Prachetas Foundation" },
+  { text: "Serving meals, spreading hope, and building a sustainable future together.", by: "Prachetas Foundation" },
+  { text: "Where compassion is shared, no one goes hungry.", by: "Prachetas Foundation" },
+  { text: "A simple contribution can become a meal, a smile, and a new beginning.", by: "Prachetas Foundation" },
 ]
 
 const MotivationStrip = () => {

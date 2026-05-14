@@ -1,23 +1,13 @@
 import { motion } from 'framer-motion'
 import { Utensils, GraduationCap, HeartPulse, Leaf } from 'lucide-react'
-import { studentsData } from '../data/studentsData'
 
 const ImpactSection = () => {
-  const totalAmt = studentsData.reduce((s, x) => s + x.totalAmountCollected, 0)
-  const totalSIP = studentsData.reduce((s, x) => s + x.sipConversions, 0)
-
-  /* Impact estimates per Prachetas Foundation focus areas */
-  const mealsServed      = Math.floor(totalAmt / 50)          // ₹50 per meal
-  const studentsSupported = Math.floor(totalAmt / 500)        // ₹500/month per student
-  const wellnessCamps    = Math.floor(totalAmt / 2000)        // ₹2,000 per wellness camp
-  const ecoMonths        = totalSIP * 12                      // months of sustained eco-support
-
   const cards = [
     {
       icon: Utensils,
-      value: mealsServed.toLocaleString('en-IN'),
+      value: '50,000+',
       label: 'Meals Served',
-      sub: 'Food distribution is our primary mission — every ₹50 feeds one person a nutritious meal',
+      sub: 'Nutritious meals distributed to families in need across communities we serve',
       tag: '🍱 Primary Focus',
       tagCls: 'bg-orange-100 text-orange-700 border-orange-200',
       from: 'from-orange-500', to: 'to-amber-600',
@@ -25,9 +15,9 @@ const ImpactSection = () => {
     },
     {
       icon: GraduationCap,
-      value: studentsSupported.toLocaleString('en-IN'),
+      value: '20+',
       label: 'Students Supported',
-      sub: 'Funding education initiatives so every child gets access to quality learning',
+      sub: 'Children receiving scholarships and educational support through our programmes',
       tag: '📚 Education',
       tagCls: 'bg-blue-100 text-blue-700 border-blue-200',
       from: 'from-blue-500', to: 'to-indigo-600',
@@ -35,9 +25,9 @@ const ImpactSection = () => {
     },
     {
       icon: HeartPulse,
-      value: wellnessCamps.toLocaleString('en-IN'),
+      value: '200+',
       label: 'Wellness Camps',
-      sub: 'Health & wellness camps bringing medical care and mental well-being to communities',
+      sub: 'Health & wellness camps bringing medical care and well-being to underserved communities',
       tag: '💚 Wellness',
       tagCls: 'bg-rose-100 text-rose-700 border-rose-200',
       from: 'from-rose-500', to: 'to-pink-600',
@@ -45,9 +35,9 @@ const ImpactSection = () => {
     },
     {
       icon: Leaf,
-      value: ecoMonths.toLocaleString('en-IN'),
+      value: '48+',
       label: 'Months of Eco-Support',
-      sub: 'Recurring SIP donations sustain long-term sustainability & conservation projects',
+      sub: '4 years of sustained environmental action — conservation, awareness & green initiatives',
       tag: '🌱 Sustainability',
       tagCls: 'bg-emerald-100 text-emerald-700 border-emerald-200',
       from: 'from-emerald-500', to: 'to-green-600',
@@ -109,13 +99,6 @@ const ImpactSection = () => {
           ))}
         </div>
 
-        <motion.p
-          initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
-          viewport={{ once: true }} transition={{ delay: 0.6 }}
-          className="text-center text-green-600/50 text-xs mt-8"
-        >
-          * Figures are illustrative estimates based on Prachetas Foundation's average program costs
-        </motion.p>
       </div>
     </section>
   )

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowLeft, Users, Repeat, IndianRupee, CalendarCheck, GraduationCap, BadgeCheck, ExternalLink, Copy, Check, Eye, EyeOff, Link } from 'lucide-react'
-import { batchMeta, studentsData } from '../data/studentsData'
+import { ArrowLeft, Users, Repeat, IndianRupee, CalendarCheck, BadgeCheck, ExternalLink, Copy, Check, Eye, EyeOff, Link, Receipt } from 'lucide-react'
+import { batchMeta } from '../data/studentsData'
+import { useStudents } from '../context/StudentsContext'
 
 const BASE_DONATE_URL = 'https://prachetasfoundation.com/donate'
 
@@ -42,11 +43,12 @@ const StudentProfile = ({ student, onBack }) => {
     ? Math.round((student.sipConversions / student.donorsCollected) * 100)
     : 0
 
-  const rank = [...studentsData]
+  const allStudents = useStudents()
+  const rank = [...allStudents]
     .sort((a, b) => b.donorsCollected - a.donorsCollected)
     .findIndex(s => s.id === student.id) + 1
 
-  const slug = student.rollNo.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()
+  const slug = student.slug
   const personalLink = `${BASE_DONATE_URL}?ref=${slug}`
 
   const storageKey = `fl_show_${slug}`
@@ -105,9 +107,6 @@ const StudentProfile = ({ student, onBack }) => {
               <div className="flex flex-wrap gap-2 text-sm">
                 <span className="bg-white/20 text-white px-3 py-1 rounded-full font-medium">{student.rollNo}</span>
                 <span className="bg-white/20 text-white px-3 py-1 rounded-full font-medium">{batch.name}</span>
-                <span className="bg-white/20 text-white px-3 py-1 rounded-full font-medium flex items-center gap-1">
-                  <GraduationCap size={13} /> {student.department}
-                </span>
               </div>
             </div>
 
@@ -125,7 +124,7 @@ const StudentProfile = ({ student, onBack }) => {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
         >
-          <StatCard icon={Users}        label="Donors Enrolled"     value={student.donorsCollected}          sub={`target: ${student.donorTarget}`} iconBg="bg-green-100"  iconColor="text-green-700" />
+          <StatCard icon={Users}        label="Donors Enrolled"     value={student.donorsCollected}          sub="donors supporting" iconBg="bg-green-100"  iconColor="text-green-700" />
           <StatCard icon={Repeat}       label="SIP Conversions"     value={student.sipConversions}           sub={`${sipRate}% rate`}                iconBg="bg-blue-100"   iconColor="text-blue-700"  />
           <StatCard icon={IndianRupee}  label="Total Raised"        value={fmt(student.totalAmountCollected)} sub="one-time donations"               iconBg="bg-orange-100" iconColor="text-orange-700"/>
           <StatCard icon={CalendarCheck}label="Monthly SIP"         value={fmt(student.sipMonthlyAmount)}    sub="recurring / month"                iconBg="bg-violet-100" iconColor="text-violet-700"/>
@@ -142,17 +141,9 @@ const StudentProfile = ({ student, onBack }) => {
           </h2>
 
           <Bar
-            label="Donor Target (100 people)" value={student.donorsCollected} max={student.donorTarget}
-            barColor={`bg-gradient-to-r ${batch.gradFrom} ${batch.gradTo}`} badge
-          />
-          <Bar
             label={`SIP Conversion Rate (${student.sipConversions} of ${student.donorsCollected} donors)`}
             pct={sipRate} value={student.sipConversions} max={student.donorsCollected}
             barColor="bg-gradient-to-r from-blue-400 to-blue-600"
-          />
-          <Bar
-            label="Monthly SIP Amount vs ₹5,000 goal" value={student.sipMonthlyAmount} max={5000}
-            barColor="bg-gradient-to-r from-violet-400 to-violet-600" badge
           />
         </motion.div>
 
@@ -214,6 +205,44 @@ const StudentProfile = ({ student, onBack }) => {
             <p className="text-xs text-green-600 font-medium mt-2 flex items-center gap-1"><Eye size={12} /> Visible on dashboard</p>
           ) : (
             <p className="text-xs text-gray-400 font-medium mt-2 flex items-center gap-1"><EyeOff size={12} /> Hidden from dashboard</p>
+          )}
+        </motion.div>
+
+        {/* Payment History */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.35 }}
+          className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6"
+        >
+          <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Receipt size={18} className="text-orange-500" /> Payment History
+          </h2>
+
+          {student.donors && student.donors.length > 0 ? (
+            <div className="space-y-3">
+              {student.donors.map((donor, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-sm">
+                      {donor.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-900 text-sm">{donor.name}</div>
+                      <div className="text-xs text-gray-500">{donor.date} · {donor.type}</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-green-600">{fmt(donor.amount)}</div>
+                    {donor.sipAmount && <div className="text-xs text-blue-500">SIP: {fmt(donor.sipAmount)}/mo</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-400">
+              <Receipt size={32} className="mx-auto mb-2 opacity-50" />
+              <p className="text-sm">No payments recorded yet</p>
+            </div>
           )}
         </motion.div>
 

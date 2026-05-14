@@ -10,7 +10,7 @@ const Footer = () => (
           </div>
           <div>
             <div className="font-bold text-white">Prachetas Foundation</div>
-            <div className="text-green-400 text-xs">COEP Social Internship 2025</div>
+            <div className="text-green-400 text-xs">COEP Social Internship 2026</div>
           </div>
         </div>
 
@@ -29,7 +29,7 @@ const Footer = () => (
       </div>
 
       <div className="mt-8 pt-6 border-t border-green-800 text-xs text-green-500 text-center">
-        © 2025 Prachetas Foundation. All rights reserved. This dashboard tracks the COEP social internship campaign.
+        © 2026 Prachetas Foundation. All rights reserved. This dashboard tracks the COEP social internship campaign.
       </div>
     </div>
   </footer>

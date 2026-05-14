@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Trophy, Medal } from 'lucide-react'
-import { studentsData, batchMeta } from '../data/studentsData'
+import { batchMeta } from '../data/studentsData'
+import { useStudents } from '../context/StudentsContext'
 
 const TABS = [
   { key: 'donors', label: 'Top Donors', field: 'donorsCollected', suffix: '' },
@@ -18,12 +19,13 @@ const rankIcon = (rank) => {
 
 const fmt = (n) =>
   n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` :
-  n >= 1000   ? `₹${(n / 1000).toFixed(0)}K`   : `₹${n}`
+  n >= 1000   ? `₹${(n / 1000).toFixed(1)}K`   : `₹${n}`
 
 const Leaderboard = ({ onSelectStudent }) => {
+  const students = useStudents()
   const [tab, setTab] = useState('donors')
   const current = TABS.find(t => t.key === tab)
-  const top = [...studentsData].sort((a, b) => b[current.field] - a[current.field]).slice(0, 10)
+  const top = [...students].sort((a, b) => b[current.field] - a[current.field]).slice(0, 10)
 
   const getBatch = (id) => batchMeta.find(b => b.id === id)
 
@@ -61,16 +63,14 @@ const Leaderboard = ({ onSelectStudent }) => {
 
         {/* Table */}
         <div className="overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm table-fixed">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-12">#</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Student</th>
-                <th className="hidden sm:table-cell text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Batch</th>
-                <th className="hidden md:table-cell text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Dept.</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Donors</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">SIP</th>
-                <th className="hidden sm:table-cell text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Raised</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-10">#</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[38%]">Student</th>
+                <th className="hidden sm:table-cell text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[22%]">Batch</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[18%]">SIP</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[22%]">Raised</th>
               </tr>
             </thead>
             <tbody>
@@ -104,19 +104,12 @@ const Leaderboard = ({ onSelectStudent }) => {
                     <td className="hidden sm:table-cell px-4 py-3">
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${batch.badge}`}>{batch.name}</span>
                     </td>
-                    <td className="hidden md:table-cell px-4 py-3 text-gray-500 text-xs">{s.department}</td>
-                    <td className="px-4 py-3 text-right">
-                      <span className={`font-bold ${tab === 'donors' ? 'text-green-700 text-base' : 'text-gray-700'}`}>
-                        {s.donorsCollected}
-                      </span>
-                      <span className="text-gray-400 text-xs">/100</span>
-                    </td>
                     <td className="px-4 py-3 text-right">
                       <span className={`font-bold ${tab === 'sip' ? 'text-blue-700 text-base' : 'text-gray-700'}`}>
                         {s.sipConversions}
                       </span>
                     </td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-right">
+                    <td className="px-4 py-3 text-right">
                       <span className={`font-bold ${tab === 'amount' ? 'text-orange-600 text-base' : 'text-gray-700'}`}>
                         {fmt(s.totalAmountCollected)}
                       </span>

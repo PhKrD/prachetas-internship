@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { ExternalLink, Flame, Target, Users, Zap } from 'lucide-react'
+import { useStudents } from '../context/StudentsContext'
 import { studentsData } from '../data/studentsData'
-
-const END_DATE = new Date('2026-08-31T23:59:59')
 
 const CountUp = ({ target, duration = 2000 }) => {
   const [count, setCount] = useState(0)
@@ -26,45 +25,31 @@ const CountUp = ({ target, duration = 2000 }) => {
 }
 
 const Hero = () => {
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0 })
-  useEffect(() => {
-    const update = () => {
-      const diff = END_DATE - new Date()
-      if (diff <= 0) return
-      setTimeLeft({
-        days:  Math.floor(diff / 86400000),
-        hours: Math.floor((diff % 86400000) / 3600000),
-        mins:  Math.floor((diff % 3600000) / 60000),
-      })
-    }
-    update()
-    const id = setInterval(update, 60000)
-    return () => clearInterval(id)
-  }, [])
-
-  const totalDonors = studentsData.reduce((s, x) => s + x.donorsCollected, 0)
-  const totalSIP    = studentsData.reduce((s, x) => s + x.sipConversions, 0)
-  const totalAmt    = studentsData.reduce((s, x) => s + x.totalAmountCollected, 0)
+  const students    = useStudents()
+  const totalDonors = students.reduce((s, x) => s + x.donorsCollected, 0)
+  const totalSIP    = students.reduce((s, x) => s + x.sipConversions, 0)
+  const totalAmt    = students.reduce((s, x) => s + x.totalAmountCollected, 0)
   const DONOR_TARGET = 18000
   const pct = Math.round((totalDonors / DONOR_TARGET) * 100)
   const C = 2 * Math.PI * 54
-  const fmt = (n) => n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : `₹${(n / 1000).toFixed(0)}K`
+  const fmt = (n) =>
+    n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` :
+    n >= 1000   ? `₹${(n / 1000).toFixed(1)}K`   : `₹${n}`
 
   return (
     <section
       className="relative pt-16 overflow-hidden min-h-screen flex items-center"
-      style={{ background: 'linear-gradient(135deg, #061a0a 0%, #0a2e10 35%, #0f3d1a 65%, #061a0a 100%)' }}
+      style={{
+        backgroundImage: 'linear-gradient(135deg, rgba(6,26,10,0.85) 0%, rgba(10,46,16,0.82) 35%, rgba(15,61,26,0.82) 65%, rgba(6,26,10,0.85) 100%), url(https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1920&q=80)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
     >
-      {/* Radial glows */}
+      {/* Dot grid */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] rounded-full opacity-10"
-          style={{ background: 'radial-gradient(circle, #4ade80, transparent 70%)' }} />
-        <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] rounded-full opacity-8"
-          style={{ background: 'radial-gradient(circle, #f97316, transparent 70%)' }} />
-        {/* Dot grid */}
         <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
           <defs><pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse">
-            <circle cx="1.5" cy="1.5" r="1.5" fill="white" />
+            <circle cx="14" cy="14" r="1.5" fill="white" />
           </pattern></defs>
           <rect width="100%" height="100%" fill="url(#dots)" />
         </svg>
@@ -80,7 +65,7 @@ const Hero = () => {
               className="inline-flex items-center gap-2 bg-orange-500/15 border border-orange-500/30 text-orange-300 text-xs font-bold px-4 py-1.5 rounded-full mb-7 tracking-widest uppercase"
             >
               <Flame size={12} className="text-orange-400" fill="currentColor" />
-              Live Campaign · COEP × Prachetas 2025
+              Live Campaign · COEP × Prachetas 2026
             </motion.div>
 
             <motion.h1
@@ -97,9 +82,7 @@ const Hero = () => {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5, duration: 0.8 }}
               className="text-green-100/80 text-lg leading-relaxed mb-8 max-w-lg"
             >
-              180 COEP engineers are on a mission to mobilise{' '}
-              <span className="text-white font-bold">18,000 donors</span> for Prachetas Foundation —
-              creating lasting environmental impact, one SIP at a time.
+              Building a sustainable future while serving care, compassion, and meals to communities — together with Prachetas Foundation.
             </motion.p>
 
             <motion.div
@@ -119,25 +102,6 @@ const Hero = () => {
               </a>
             </motion.div>
 
-            {/* Countdown */}
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}>
-              <div className="text-green-400 text-xs font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-ping"></span>
-                Campaign Countdown
-              </div>
-              <div className="flex gap-3">
-                {[
-                  { v: timeLeft.days,  l: 'Days'  },
-                  { v: timeLeft.hours, l: 'Hours' },
-                  { v: timeLeft.mins,  l: 'Mins'  },
-                ].map(({ v, l }) => (
-                  <div key={l} className="bg-white/8 border border-white/15 rounded-2xl px-5 py-3 text-center min-w-[68px] backdrop-blur-sm">
-                    <div className="text-3xl font-black text-white tabular-nums">{String(v).padStart(2,'0')}</div>
-                    <div className="text-xs text-green-400 font-semibold mt-0.5">{l}</div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
           </motion.div>
 
           {/* ── Right ring + stats ── */}
@@ -167,13 +131,10 @@ const Hero = () => {
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                <div className="text-5xl font-black leading-none">
-                  <CountUp target={pct} /><span className="text-3xl">%</span>
+                <div className="text-4xl font-black leading-none">
+                  {fmt(totalAmt)}
                 </div>
-                <div className="text-sm text-emerald-300 font-bold mt-1">of donor target</div>
-                <div className="text-xs text-white/40 mt-1">
-                  <CountUp target={totalDonors} /> / {DONOR_TARGET.toLocaleString('en-IN')}
-                </div>
+                <div className="text-sm text-emerald-300 font-bold mt-1">Total Raised</div>
               </div>
             </div>
 
@@ -182,8 +143,7 @@ const Hero = () => {
               {[
                 { icon: Users,  label: 'Donors Enrolled', value: totalDonors, color: 'text-green-300',  glow: 'shadow-green-500/20'  },
                 { icon: Target, label: 'SIP Conversions', value: totalSIP,    color: 'text-blue-300',   glow: 'shadow-blue-500/20'   },
-                { icon: Flame,  label: 'Total Raised',    value: null, fmtVal: fmt(totalAmt), color: 'text-orange-300', glow: 'shadow-orange-500/20' },
-                { icon: Zap,    label: 'Active Students', value: 180,         color: 'text-emerald-300',glow: 'shadow-emerald-500/20'},
+                  { icon: Zap,    label: 'Active Students', value: studentsData.length, color: 'text-emerald-300',glow: 'shadow-emerald-500/20'},
               ].map(({ icon: Icon, label, value, fmtVal, color, glow }) => (
                 <div key={label} className={`bg-white/6 border border-white/10 rounded-2xl p-4 text-center backdrop-blur-sm shadow-lg ${glow} hover:bg-white/10 transition-colors`}>
                   <Icon className={`${color} mx-auto mb-1.5`} size={18} />

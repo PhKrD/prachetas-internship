@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { StudentsProvider } from './context/StudentsContext'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import MotivationStrip from './components/MotivationStrip'
@@ -15,28 +16,30 @@ function App() {
   const [activeBatch, setActiveBatch]         = useState(null)
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <StudentsProvider>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
 
-      {selectedStudent ? (
-        <StudentProfile
-          student={selectedStudent}
-          onBack={() => setSelectedStudent(null)}
-        />
-      ) : (
-        <>
-          <Hero />
-          <MotivationStrip />
-          <CampaignStats />
-          <ImpactSection />
-          <MotivationStrip />
-          <BatchOverview activeBatch={activeBatch} onSelectBatch={setActiveBatch} />
-          <Leaderboard onSelectStudent={setSelectedStudent} />
-          <StudentGrid activeBatch={activeBatch} onSelectStudent={setSelectedStudent} />
-          <Footer />
-        </>
-      )}
-    </div>
+        {selectedStudent ? (
+          <StudentProfile
+            student={selectedStudent}
+            onBack={() => setSelectedStudent(null)}
+          />
+        ) : (
+          <>
+            <Hero />
+            <MotivationStrip />
+            <CampaignStats />
+            <ImpactSection />
+            <MotivationStrip />
+            <BatchOverview activeBatch={activeBatch} onSelectBatch={setActiveBatch} />
+            <Leaderboard onSelectStudent={setSelectedStudent} />
+            <StudentGrid activeBatch={activeBatch} onSelectStudent={setSelectedStudent} onSelectBatch={setActiveBatch} />
+            <Footer />
+          </>
+        )}
+      </div>
+    </StudentsProvider>
   )
 }
 

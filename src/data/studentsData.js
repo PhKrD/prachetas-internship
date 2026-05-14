@@ -1,71 +1,142 @@
-/* Deterministic pseudo-random so data is consistent across reloads */
+/* Deterministic pseudo-random so stats are consistent across reloads */
 const sr = (seed) => {
   const x = Math.sin(seed * 9301 + 49297) * 233280
   return x - Math.floor(x)
 }
 
-const firstNames = [
-  'Aarav','Arjun','Rahul','Vikram','Rohan','Siddharth','Kartik','Nikhil',
-  'Pranav','Akash','Dhruv','Aditya','Varun','Ankit','Omkar','Tejas',
-  'Sahil','Gaurav','Mayur','Amit','Vivek','Sanket','Yogesh','Pratik',
-  'Rishabh','Vishal','Sachin','Nitin','Soham','Shubham','Abhishek','Nilesh',
-  'Rushikesh','Prathamesh','Vedant','Aniket','Atharva','Kedar','Prasad','Vaibhav',
-  'Priya','Pooja','Neha','Sneha','Shruti','Ankita','Rasika','Sonali',
-  'Apurva','Swati','Rutuja','Sanjana','Pallavi','Ashwini','Smita','Kavita',
-  'Sakshi','Manasi','Vrushali','Vaishnavi','Gauri','Devyani','Sheetal','Aarti',
-  'Rohini','Komal','Nisha','Archana','Divya','Isha','Jyoti','Mrunali',
-  'Namrata','Poonam','Aditi','Bhakti','Chaitrali','Gunjan','Tejashri','Meghna',
-  'Nandita','Pratiksha','Rashmi','Sampada','Tejaswini','Ujwala','Varsha','Aishwarya',
-  'Yuvraj','Bharat','Dhananjay','Ishaan','Onkar','Raunak','Sameer','Umesh',
-  'Sushant','Madhav','Ashish','Ajit','Chetan','Kunal','Amol','Jayesh',
-  'Hemant','Tanmay','Devendra','Chinmay','Siddhesh','Bhushan','Kapil','Deepak',
-  'Lalit','Girish','Dinesh','Sagar','Manish','Karan','Sunil','Harish',
-  'Rajesh','Prashant','Yash','Suresh','Ravi','Tushar','Sumit','Swapnil',
-  'Vijay','Pavan','Lokesh','Ganesh','Santosh','Rupesh','Vipul','Chintamani',
-  'Madhuri','Damini','Esha','Savita','Tanuja','Uma','Veena','Yamini',
-  'Bharati','Dhanashri','Chandrika','Falguni','Geeta','Harsha','Indira','Kalpana',
-  'Lata','Ranjana','Sunita','Bhavana','Chhaya','Ekta','Deepika','Manisha',
+const toSlug = (name) =>
+  name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+
+/* Real student names by batch */
+const rawBatches = [
+  /* Batch 1 */ [
+    'Ishaan Mudkhedkar','Sharwil Shimpi','Yuvraj Shingate','Chaitanya Sankpal',
+    'Aryan Khairkhar','Shambhavi Sachin Jagtap','Supriya Kumari','Amruta Shriramjwar',
+    'Sayali Vishwanath Pukale','Vignesh Yogesh Jadhav','Arnav Tejas Padhye',
+    'Hanmant Nagnath Hembade','Abhinav Wadhwa','Devaashish Pranav Vaidya',
+    'Gandhar Prashant Tawade','Harshwardhan Jagtap','Diya Mehul Metha',
+    'Janak Sharad Rahudkar','Meet Vinay Gupta','Sujal Eknath Jadhao',
+    'Ashutosh Amit Saxena','Prajwal Ravindra Bendre','Nehal Gandhi',
+    'Ishwari Vijay Patil','Ashvin Vishnu Wanjare','Devansh Dwivedi',
+    'Shalaka Kudale','Yash Ramprasad Ambhure','Mukul Manohar Bhosale',
+    'Chinmay Vikas Chavan','Binitmani Umeshmani Tripathi','Prathmesh Shrikant Darokar',
+    'Nihal Rajesh Bhatia','Aaditya Mahesh Narkhedkar','Dipali Balaji Lokhande',
+    'Aditi Satish Sawant','Alina Wadhwani','Kalyani Gajanan Jaybhaye',
+    'Astha Gupta','Isha Trikutkar','Niraj Kailas Jadhao',
+    'Nayan Daulat Suryawanshi','Savari Vishwas Satav','Yash Bhavale',
+    'Atharva Nilesh Mohite','Nikhil Shripad Patankar','Vijay Shivram Prajapati',
+    'Anvi Pravin Mokal','Vinita Dattatray Kulkarni','Aadya Shah','Aaditya Ashok Ghule',
+  ],
+  /* Batch 2 */ [
+    'Yash Kaloni','Yugal Sandip Bhortake','Akshit Rajesh','Hrucha Sandeshkumar Shinde',
+    'Suryansh Pandey','Vishal Venkatesh Bhat','Harsh Pravin Gosavi','Parth Patil',
+    'Prajwal Gautam Narwade','Siya Powar','Adwait Prasad Zanjurne','Parshad Sachin Nale',
+    'Nehal Deepak Chaudhari','Parth Sachin Nale','Priyesh Sunil Patil',
+    'Riddhi Sachin Bendale','Anannya Mirkute','Aman Vinayak Nirmal',
+    'Sanjana Anand Ijeri','Soha Dnyaneshwar Borchate','Mayank Singh Bhadouria',
+    'Shravan Jitendra More','Rohak Prashant Zalke','Shital Mallinath Pujari',
+    'Antara Mukherjee','Samarth Samarth Galande','Saksham Nilesh Patil',
+    'Aryan Prashant Gore','Sai Rajeev Hotha','Darsheel Dhammanand Nagrale',
+    'Sarthak Neeraj Bhaskar','Ronnit Kasat','Suhani Pratapsinh More',
+    'Keshav Pazhayannur','Tanvi Pawar','Aditya Kedar Bavadekar',
+    'Sanaa Vikram Joshi','Shruti Santosh Lonkar','Swaraali Jaydeep Joshi',
+    'Shravani Dhorey','Himanshu Rushiraj Chouhan','Avaneesh Sudhir Muthal',
+    'Janhavi Ghose','Mrudula Vinay Nisal','Vaishnavi Gorakhnath Misal',
+    'Hasnain Bohari','Rupak Shivdarshan Ambekar','Mrunmayi Anandkumar Londhe',
+    'Shirley Daulatkar','Rushabh Bhairavnath Varule','Khushi Bansal',
+  ],
+  /* Batch 3 */ [
+    'Rohit Manish Jain','Arnav M Katepallewar','Lakshya Mahesh Mithapalli',
+    'Parag Navnit Patil','Aryan Sanjay Pol','Anaya Sandeep Gore',
+    'Rishabh Manish Rathi','Ishaan Sonawane','Hrida Pattanshetti',
+    'Preesha Manoj Motwani','Archit Manoj Deshpande','Ranjeet Jeevan Wakde',
+    'Sanchit Baburao Farakate','Aastha Rajesh Patange','Aalap Talegaonkar',
+    'Burhanuddin Yusuf Dalal','Rohan Ramdas Dome','Saket Anand Joshi',
+    'Sai S Heralgi','Hayyan Hayyur Rehman Shaikh','Megharani Rajendra Gore',
+    'Harsh Jaising Yadav','Soham Rajkumar Vibhute','Divij Sandeep Banavali',
+    'Atharva Sharma','Saish Vijay Sargar','Charvi Vijaykumar Mulay',
+    'Areen Yatin Valsangkar','Tanishk Amit Badal','Divya Baban Sambherao',
+    'Shrinivas Digambar Pande','Ashutosh Kumar','Aditya Uddhav Tekale',
+    'Redekar Savani Vijay','Krishna Nitin Khilare','Rucha Ganesh Dasnam',
+    'Aditya Ramchandra Deshpande','Janhvi Mukund Sahare','Abhinav Kokate',
+    'Ayush Adesh Kamble','Purva Mahesh Joshi',
+  ],
+  /* Batch 4 */ [
+    'Sanika Vishnu Awatade','Aarya Paresh Nimkar','Chaitanya Vaishampayan',
+    'Himanshu Ramesh Pujari','Vedant Makarand Ranmale','Keshav Ganesh Miniyar',
+    'Dhruva Satpute','Atharva Kamble','Aryan Khairkhar','Pranjal Dattatray Hile',
+    'Shourya Mohite','Nidhi Vishwakarma','Bhargav Gorane','Aryan Santosh Divekar',
+    'Manav Dhanraj Rachetti','Utkarsh Umashankar Gupta','Amogh Abhay Kulkarni',
+    'Shreyak Girish Kadam','Shrihan Kedar Kulkarni','Ashish Arwade',
+    'Raj Desai','Yashwardhan Bhame','Prathamesh Santosh More','Arush Ashish Kalawar',
+    'Atharva Hemant Desai','Paritosh Prasanna Arkadi','Swapnali Santosh Mali',
+    'Dnyaneshwari Jalindar Jadhav','Shivam Santosh Gole','Amol Mahesh Bhoye',
+    'Parth Prashant Baride','Karan Mahadev Kadam','Alok Madhav Kadam',
+    'Atharv S Jadhav','Harshit Ramesh Shirol','Harshit Sandip Gahukar',
+    'Mitali Rohan Bhindwale','Aryan Ganesh Kale','Ruturaj Rushikesh Dhotre',
+    'Avishkar Karande','Pransh Govind Chandak',
+  ],
+  /* Batch 5 (Others) */ [
+    'Rahul Sharma','Priya Patel','Amit Kumar','Neha Singh','Vikram Reddy',
+    'Sneha Joshi','Arjun Mehta','Kavita Nair','Rohan Das','Pooja Verma',
+  ],
 ]
 
-const lastNames = [
-  'Patil','Shinde','Desai','Kulkarni','Jadhav','More','Suryawanshi','Kamble',
-  'Pawar','Gaikwad','Salunke','Bhosale','Kale','Deshpande','Joshi','Naik',
-  'Sawant','Wagh','Mane','Chavan','Thorat','Dongre','Wankhede','Bhandari',
-  'Pande','Varma','Gupta','Sharma','Singh','Kumar','Yadav','Mehta',
-  'Shah','Patel','Iyer','Nair','Reddy','Rao','Mishra','Tiwari',
-  'Verma','Raut','Lokhande','Kharat','Bhavsar','Gondhalekar','Nimkar','Pendse',
-]
+/* Build flat list */
+const rawList = rawBatches.flatMap((names, bi) =>
+  names.map(name => ({ name, batch: bi + 1 }))
+)
 
-const depts = ['Computer Engg.','Mechanical Engg.','Civil Engg.','Electronics Engg.','Instrumentation','Chemical Engg.']
+/* Detect slug duplicates across all students */
+const slugCount = {}
+rawList.forEach(s => {
+  const base = toSlug(s.name)
+  slugCount[base] = (slugCount[base] || 0) + 1
+})
 
-const generateStudents = () =>
-  Array.from({ length: 180 }, (_, i) => {
-    const r = (o) => sr(i * 17 + o)
-    const batch = Math.floor(i / 45) + 1
-    const donors   = Math.floor(r(1) * 80 + 12)
-    const sipCount = Math.floor(donors * (r(2) * 0.40 + 0.15))
-    const avgDon   = Math.floor(r(3) * 350 + 100)
-    const avgSip   = Math.floor(r(4) * 300 + 100)
+/* Generate unique slugs: append batch number only for duplicates */
+const slugUsed = {}
+const rawWithSlugs = rawList.map(s => {
+  const base = toSlug(s.name)
+  let slug = slugCount[base] > 1 ? `${base}-b${s.batch}` : base
+  /* Further dedup within same batch (edge case) */
+  if (slugUsed[slug]) slug = `${slug}-2`
+  slugUsed[slug] = true
+  return { ...s, slug }
+})
 
-    return {
-      id: i + 1,
-      name: `${firstNames[Math.floor(r(5) * firstNames.length)]} ${lastNames[Math.floor(r(6) * lastNames.length)]}`,
-      batch,
-      rollNo:     `COEP-B${batch}-${String((i % 45) + 1).padStart(2, '0')}`,
-      department: depts[Math.floor(r(7) * depts.length)],
-      donorsCollected:     donors,
-      donorTarget:         100,
-      sipConversions:      sipCount,
-      totalAmountCollected: donors * avgDon,
-      sipMonthlyAmount:    sipCount * avgSip,
-    }
-  })
+/* Assign IDs and roll numbers — stats start at 0, real data fetched from Neon DB */
+const batchCounters = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+export const studentsData = rawWithSlugs.map((s, i) => {
+  batchCounters[s.batch]++
+  const pos = batchCounters[s.batch]
+  
+  // Add sample donor data for first 5 students in each batch for testing
+  const sampleDonors = (i < 5) ? [
+    { name: 'John Doe', amount: 5000, date: '2024-01-15', type: 'One-time' },
+    { name: 'Jane Smith', amount: 10000, date: '2024-02-10', type: 'SIP', sipAmount: 1000 },
+    { name: 'Mike Johnson', amount: 2500, date: '2024-03-05', type: 'One-time' },
+  ] : []
 
-export const studentsData = generateStudents()
+  return {
+    id:                   i + 1,
+    name:                 s.name,
+    batch:                s.batch,
+    slug:                 s.slug,
+    rollNo:               s.batch === 5 ? `OTHER-${String(pos).padStart(2, '0')}` : `COEP-B${s.batch}-${String(pos).padStart(2, '0')}`,
+    donorsCollected:      sampleDonors.length,
+    donorTarget:          100,
+    sipConversions:       sampleDonors.filter(d => d.type === 'SIP').length,
+    totalAmountCollected: sampleDonors.reduce((sum, d) => sum + d.amount, 0),
+    sipMonthlyAmount:     sampleDonors.filter(d => d.sipAmount).reduce((sum, d) => sum + d.sipAmount, 0),
+    donors:               sampleDonors, // Array of { name, amount, date, type }
+  }
+})
 
 export const batchMeta = [
-  { id:1, name:'Batch Alpha', gradFrom:'from-orange-400', gradTo:'to-orange-600', lightBg:'bg-orange-50', border:'border-orange-200', text:'text-orange-700', badge:'bg-orange-100 text-orange-800', ring:'ring-orange-400' },
-  { id:2, name:'Batch Beta',  gradFrom:'from-blue-400',   gradTo:'to-blue-600',   lightBg:'bg-blue-50',   border:'border-blue-200',   text:'text-blue-700',   badge:'bg-blue-100 text-blue-800',   ring:'ring-blue-400'   },
-  { id:3, name:'Batch Gamma', gradFrom:'from-emerald-400',gradTo:'to-emerald-600',lightBg:'bg-emerald-50',border:'border-emerald-200',text:'text-emerald-700',badge:'bg-emerald-100 text-emerald-800',ring:'ring-emerald-400'},
-  { id:4, name:'Batch Delta', gradFrom:'from-violet-400', gradTo:'to-violet-600', lightBg:'bg-violet-50', border:'border-violet-200', text:'text-violet-700', badge:'bg-violet-100 text-violet-800', ring:'ring-violet-400' },
+  { id:1, name:'Batch 1', gradFrom:'from-orange-400', gradTo:'to-orange-600', lightBg:'bg-orange-50', border:'border-orange-200', text:'text-orange-700', badge:'bg-orange-100 text-orange-800', ring:'ring-orange-400' },
+  { id:2, name:'Batch 2', gradFrom:'from-blue-400',   gradTo:'to-blue-600',   lightBg:'bg-blue-50',   border:'border-blue-200',   text:'text-blue-700',   badge:'bg-blue-100 text-blue-800',   ring:'ring-blue-400'   },
+  { id:3, name:'Batch 3', gradFrom:'from-emerald-400',gradTo:'to-emerald-600',lightBg:'bg-emerald-50',border:'border-emerald-200',text:'text-emerald-700',badge:'bg-emerald-100 text-emerald-800',ring:'ring-emerald-400'},
+  { id:4, name:'Batch 4', gradFrom:'from-violet-400', gradTo:'to-violet-600', lightBg:'bg-violet-50', border:'border-violet-200', text:'text-violet-700', badge:'bg-violet-100 text-violet-800', ring:'ring-violet-400' },
+  { id:5, name:'Others',  gradFrom:'from-gray-400',    gradTo:'to-gray-600',    lightBg:'bg-gray-50',    border:'border-gray-200',    text:'text-gray-700',    badge:'bg-gray-100 text-gray-800',    ring:'ring-gray-400'    },
 ]

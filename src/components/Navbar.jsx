@@ -11,7 +11,7 @@ const Navbar = () => (
           </div>
           <div>
             <div className="font-bold text-gray-900 text-base leading-tight">Prachetas Foundation</div>
-            <div className="text-xs text-green-700 font-semibold tracking-wide">COEP Social Internship 2025</div>
+            <div className="text-xs text-green-700 font-semibold tracking-wide">COEP Social Internship 2026</div>
           </div>
         </div>
 
