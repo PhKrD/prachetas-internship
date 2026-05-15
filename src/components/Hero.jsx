@@ -33,9 +33,7 @@ const Hero = () => {
   const DONOR_TARGET = 18000
   const pct = Math.round((totalDonors / DONOR_TARGET) * 100)
   const C = 2 * Math.PI * 54
-  const fmt = (n) =>
-    n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` :
-    n >= 1000   ? `₹${(n / 1000).toFixed(1)}K`   : `₹${n}`
+  const fmt = (n) => `₹${n.toLocaleString('en-IN')}`
 
   return (
     <section

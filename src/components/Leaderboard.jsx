@@ -17,9 +17,7 @@ const rankIcon = (rank) => {
   return <span className="text-xs font-bold text-gray-400 w-4 text-center">{rank}</span>
 }
 
-const fmt = (n) =>
-  n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` :
-  n >= 1000   ? `₹${(n / 1000).toFixed(1)}K`   : `₹${n}`
+const fmt = (n) => `₹${n.toLocaleString('en-IN')}`
 
 const Leaderboard = ({ onSelectStudent }) => {
   const students = useStudents()

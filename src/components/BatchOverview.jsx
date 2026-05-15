@@ -58,9 +58,7 @@ const BatchOverview = ({ activeBatch, onSelectBatch }) => {
     }
   }).sort((a, b) => b.amount - a.amount).map((b, i) => ({ ...b, rank: i + 1 }))
 
-  const fmt = (n) =>
-    n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` :
-    n >= 1000   ? `₹${(n / 1000).toFixed(1)}K`   : `₹${n}`
+  const fmt = (n) => `₹${n.toLocaleString('en-IN')}`
 
   return (
     <section id="batches" className="py-14 px-4 sm:px-6 lg:px-8 bg-gray-50">

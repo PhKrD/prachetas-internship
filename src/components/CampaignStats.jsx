@@ -2,10 +2,7 @@ import { motion } from 'framer-motion'
 import { Users, Repeat, IndianRupee, CalendarCheck } from 'lucide-react'
 import { useStudents } from '../context/StudentsContext'
 
-const fmt = (n) =>
-  n >= 10000000 ? `₹${(n / 10000000).toFixed(2)} Cr` :
-  n >= 100000   ? `₹${(n / 100000).toFixed(2)} L`   :
-  n >= 1000     ? `₹${(n / 1000).toFixed(1)}K`       : `₹${n}`
+const fmt = (n) => `₹${n.toLocaleString('en-IN')}`
 
 const CampaignStats = () => {
   const students     = useStudents()
