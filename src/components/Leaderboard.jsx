@@ -123,17 +123,25 @@ const Leaderboard = ({ onSelectStudent }) => {
           </table>
         </div>
 
-        {/* Show More Button */}
-        {visibleCount < students.filter(s => s.batch >= 1 && s.batch <= 4).length && (
-          <div className="text-center mt-6">
+        {/* Show More / Show Less Buttons */}
+        <div className="text-center mt-6 flex justify-center gap-3">
+          {visibleCount > 10 && (
+            <button
+              onClick={() => setVisibleCount(10)}
+              className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors"
+            >
+              Show Less
+            </button>
+          )}
+          {visibleCount < students.filter(s => s.batch >= 1 && s.batch <= 4).length && (
             <button
               onClick={() => setVisibleCount(prev => prev + 10)}
               className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
             >
               Show More
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </section>
   )
