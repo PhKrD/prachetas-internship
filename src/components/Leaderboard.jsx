@@ -22,11 +22,12 @@ const fmt = (n) => `₹${n.toLocaleString('en-IN')}`
 const Leaderboard = ({ onSelectStudent }) => {
   const students = useStudents()
   const [tab, setTab] = useState('donors')
+  const [visibleCount, setVisibleCount] = useState(10)
   const current = TABS.find(t => t.key === tab)
   const top = [...students]
     .filter(s => s.batch >= 1 && s.batch <= 4)
     .sort((a, b) => b[current.field] - a[current.field])
-    .slice(0, 10)
+    .slice(0, visibleCount)
 
   const getBatch = (id) => batchMeta.find(b => b.id === id)
 
@@ -121,6 +122,18 @@ const Leaderboard = ({ onSelectStudent }) => {
             </tbody>
           </table>
         </div>
+
+        {/* Show More Button */}
+        {visibleCount < students.filter(s => s.batch >= 1 && s.batch <= 4).length && (
+          <div className="text-center mt-6">
+            <button
+              onClick={() => setVisibleCount(prev => prev + 10)}
+              className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
+            >
+              Show More
+            </button>
+          </div>
+        )}
       </div>
     </section>
   )
