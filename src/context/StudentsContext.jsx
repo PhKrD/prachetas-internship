@@ -138,22 +138,26 @@ export const StudentsProvider = ({ children }) => {
     setDirectDonorsError('')
 
     try {
-      const res = await fetch(DIRECT_DONATIONS_URL, {
-        method: 'GET',
-        headers: { 'x-direct-password': cleaned },
-      })
-      const data = await res.json().catch(() => ({ success: false, error: 'Invalid server response' }))
+      // Fetch ALL donations from Neon (both personalized and direct)
+      const rows = await neonQuery(
+        `SELECT donor_name, amount, subscription_id, created_at, referred_by
+         FROM donations
+         WHERE status = 'completed'
+         ORDER BY created_at DESC`
+      )
 
-      if (!res.ok || !data.success) {
-        setDirectDonorsError(data.error || 'Access denied')
-        setDirectDonors([])
-        return false
-      }
+      const allDonors = rows.map(row => ({
+        name: row.donor_name || 'Anonymous',
+        amount: Number(row.amount),
+        date: new Date(row.created_at).toISOString().split('T')[0],
+        type: row.subscription_id ? 'SIP' : 'One-time',
+        referredBy: row.referred_by || null,
+      }))
 
-      setDirectDonors(Array.isArray(data.donors) ? data.donors : [])
+      setDirectDonors(allDonors)
       return true
-    } catch (_) {
-      setDirectDonorsError('Unable to load direct donations')
+    } catch (err) {
+      setDirectDonorsError('Unable to load donations')
       setDirectDonors([])
       return false
     } finally {

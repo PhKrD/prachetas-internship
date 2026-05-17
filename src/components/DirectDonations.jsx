@@ -36,10 +36,10 @@ const DirectDonations = () => {
         <div className="max-w-3xl mx-auto">
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-2">
-              <Heart size={20} className="text-rose-500" /> Direct Donations (Protected)
+              <Heart size={20} className="text-rose-500" /> All Donations (Protected)
             </h2>
             <p className="text-sm text-gray-500 mb-4">
-              Enter password to view direct-donation donor list.
+              Enter password to view all donations (personalized links + direct).
             </p>
 
             <form onSubmit={onUnlock} className="flex flex-col sm:flex-row gap-3">
@@ -72,9 +72,9 @@ const DirectDonations = () => {
         <div className="max-w-3xl mx-auto">
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-2">
-              <Heart size={20} className="text-rose-500" /> Direct Donations
+              <Heart size={20} className="text-rose-500" /> All Donations
             </h2>
-            <p className="text-sm text-gray-500">No direct donations found right now.</p>
+            <p className="text-sm text-gray-500">No donations found right now.</p>
           </div>
         </div>
       </section>
@@ -82,6 +82,8 @@ const DirectDonations = () => {
   }
 
   const total = donors.reduce((s, d) => s + d.amount, 0)
+  const directCount = donors.filter(d => !d.referredBy).length
+  const referredCount = donors.filter(d => d.referredBy).length
 
   return (
     <section className="py-14 px-4 sm:px-6 lg:px-8 bg-white border-b border-gray-100">
@@ -93,29 +95,32 @@ const DirectDonations = () => {
         >
           <div>
             <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <Heart size={22} className="text-rose-500" /> Direct Donations
+              <Heart size={22} className="text-rose-500" /> All Donations
             </h2>
             <p className="text-sm text-gray-500 mt-0.5">
-              {donors.length} donor{donors.length !== 1 ? 's' : ''} donated directly · Total {fmt(total)}
+              {donors.length} total donation{donors.length !== 1 ? 's' : ''} · {referredCount} via links · {directCount} direct · Total {fmt(total)}
             </p>
           </div>
           <div className="flex items-center gap-2 bg-rose-50 border border-rose-200 rounded-2xl px-5 py-3">
             <IndianRupee size={18} className="text-rose-600" />
             <div>
               <div className="text-xl font-extrabold text-rose-700">{fmt(total)}</div>
-              <div className="text-xs text-rose-500">Raised directly</div>
+              <div className="text-xs text-rose-500">Total raised</div>
             </div>
           </div>
         </motion.div>
 
         <div className="overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
-          <table className="w-full text-sm table-fixed">
+          <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[42%]">Donor</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[20%]">Date</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[18%]">Type</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[20%]">Amount</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[5%]">#</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[25%]">Donor</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[12%]">Date</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[10%]">Time</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[12%]">Type</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[21%]">Referral Link</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[15%]">Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -123,24 +128,40 @@ const DirectDonations = () => {
                 <motion.tr
                   key={i}
                   initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }} transition={{ duration: 0.3, delay: i * 0.04 }}
+                  viewport={{ once: true }} transition={{ duration: 0.3, delay: i * 0.02 }}
                   className="border-b border-gray-100 hover:bg-rose-50/30 transition-colors"
                 >
+                  <td className="px-4 py-3 text-gray-400 text-xs font-medium">{i + 1}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 font-bold text-xs flex-shrink-0">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 ${d.referredBy ? 'bg-green-100 text-green-600' : 'bg-rose-100 text-rose-600'}`}>
                         {d.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                       </div>
                       <span className="font-semibold text-gray-800 truncate">{d.name}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{d.date}</td>
+                  <td className="px-4 py-3 text-gray-500 text-xs">{d.time}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                       d.type === 'SIP'
                         ? 'bg-blue-50 text-blue-700 border border-blue-200'
                         : 'bg-green-50 text-green-700 border border-green-200'
                     }`}>{d.type}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {d.referredBy ? (
+                      <a
+                        href={`https://prachetasfoundation.com/donate?ref=${d.referredBy}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold text-purple-600 hover:text-purple-800 hover:underline truncate block"
+                      >
+                        {d.referredBy}
+                      </a>
+                    ) : (
+                      <span className="text-xs font-semibold text-gray-500">Direct</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right font-bold text-rose-600">{fmt(d.amount)}</td>
                 </motion.tr>
