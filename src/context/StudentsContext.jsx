@@ -8,6 +8,18 @@ const DIRECT_DONATIONS_URL = 'https://prachetasfoundation.com/.netlify/functions
 const NEON_CONN = 'postgresql://neondb_owner:npg_4JGziLHbTnx5@ep-withered-block-ahmd8lhh-pooler.c-3.us-east-1.aws.neon.tech/neondb'
 const NEON_API  = 'https://api.c-3.us-east-1.aws.neon.tech/sql'
 
+// Mapping for fundraiser link slugs that don't match student slugs
+const SLUG_MAPPING = {
+  'amruta-shriramjwar-m9ah': 'amruta-shriramjwar',
+  'amruta-shriramjwar': 'amruta-shriramjwar',
+  'aryan-khairkhar-b1': 'aryan-khairkhar-b1',
+  'aryan-khairkhar-b4': 'aryan-khairkhar-b4',
+  'aman-khandelwal-k3mz': 'aman-khandelwal-k3mz',
+  // Add more mappings as needed
+}
+
+const normalizeSlug = (slug) => SLUG_MAPPING[slug] || slug
+
 const neonQuery = async (query) => {
   const res = await fetch(NEON_API, {
     method: 'POST',
@@ -57,14 +69,15 @@ export const StudentsProvider = ({ children }) => {
            ORDER BY created_at DESC`
         )
         for (const row of rows) {
+          const normalizedSlug = normalizeSlug(row.referred_by)
           const entry = {
             name:   row.donor_name || 'Anonymous',
             amount: Number(row.amount),
             date:   new Date(row.created_at).toISOString().split('T')[0],
             type:   row.subscription_id ? 'SIP' : 'One-time',
           }
-          if (!donors[row.referred_by]) donors[row.referred_by] = []
-          donors[row.referred_by].push(entry)
+          if (!donors[normalizedSlug]) donors[normalizedSlug] = []
+          donors[normalizedSlug].push(entry)
         }
         setDonorsMap(donors)
       } catch (neonErr) {
