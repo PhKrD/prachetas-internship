@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
-import { ExternalLink, Flame, Target, Users, Zap } from 'lucide-react'
-import { useStudents } from '../context/StudentsContext'
+import { ExternalLink, Flame, Target, Users, Zap, RefreshCw } from 'lucide-react'
+import { useStudents, useStudentsLoading, useStudentsRefreshing, useRefreshData } from '../context/StudentsContext'
 import { studentsData } from '../data/studentsData'
 
 const CountUp = ({ target, duration = 2000 }) => {
@@ -26,6 +26,9 @@ const CountUp = ({ target, duration = 2000 }) => {
 
 const Hero = () => {
   const students    = useStudents()
+  const loading     = useStudentsLoading()
+  const refreshing  = useStudentsRefreshing()
+  const refreshData = useRefreshData()
   const mainBatchStudents = students.filter(s => s.batch >= 1 && s.batch <= 4)
   const totalDonors = students.reduce((s, x) => s + x.donorsCollected, 0)
   const totalSIP    = students.reduce((s, x) => s + x.sipConversions, 0)
@@ -55,6 +58,18 @@ const Hero = () => {
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
+        {/* Refresh button */}
+        <div className="absolute top-4 right-4">
+          <button
+            onClick={refreshData}
+            disabled={loading || refreshing}
+            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+            <span className="text-sm font-medium">{refreshing ? 'Refreshing...' : 'Refresh Data'}</span>
+          </button>
+        </div>
+
         <div className="grid lg:grid-cols-2 gap-16 items-center">
 
           {/* ── Left copy ── */}

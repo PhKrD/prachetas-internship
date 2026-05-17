@@ -31,81 +31,86 @@ export const StudentsProvider = ({ children }) => {
   const [directDonorsError, setDirectDonorsError] = useState('')
   const [others, setOthers]           = useState([])
   const [loading, setLoading]         = useState(true)
+  const [refreshing, setRefreshing]   = useState(false)
 
   const coreStudentSlugs = new Set(studentsData.map(s => s.slug))
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch stats from existing endpoint
-        let statsData = {}
-        const statsRes = await fetch(STATS_URL).then(r => r.json()).catch(() => ({ success: false }))
-        if (statsRes.success) {
-          statsData = statsRes.stats
-          setStatsMap(statsData)
-        }
-
-        // Fetch donor details from Neon via HTTP API
-        let donors = {}
-        try {
-          const rows = await neonQuery(
-            `SELECT referred_by, donor_name, amount, subscription_id, created_at
-             FROM donations
-             WHERE status = 'completed'
-               AND referred_by IS NOT NULL
-             ORDER BY created_at DESC`
-          )
-          for (const row of rows) {
-            const entry = {
-              name:   row.donor_name || 'Anonymous',
-              amount: Number(row.amount),
-              date:   new Date(row.created_at).toISOString().split('T')[0],
-              type:   row.subscription_id ? 'SIP' : 'One-time',
-            }
-            if (!donors[row.referred_by]) donors[row.referred_by] = []
-            donors[row.referred_by].push(entry)
-          }
-          setDonorsMap(donors)
-        } catch (neonErr) {
-          const msg = neonErr?.message ?? String(neonErr)
-          console.error('[Neon] query failed:', msg)
-        }
-
-        // Fetch others (self-registered donation links)
-        const othersRes = await fetch(OTHERS_URL).then(r => r.json()).catch(() => ({ success: false }))
-        if (othersRes.success && othersRes.links) {
-          const otherStudents = othersRes.links
-            .filter(link => (
-              link.show_on_dashboard !== false &&
-              link.is_active !== false &&
-              link.slug &&
-              !coreStudentSlugs.has(link.slug)
-            ))
-            .map((link, idx) => {
-              const s = statsData[link.slug] || {}
-              return {
-                id: studentsData.length + idx + 1,
-                name: link.student_name || 'Anonymous',
-                batch: 5,
-                slug: link.slug,
-                rollNo: link.roll_no || `OTHER-${String(idx + 1).padStart(2, '0')}`,
-                donorsCollected:      s.donorsCollected      || 0,
-                donorTarget:          100,
-                sipConversions:       s.sipConversions       || 0,
-                totalAmountCollected: s.totalAmountCollected || 0,
-                sipMonthlyAmount:     s.sipMonthlyAmount     || 0,
-                donors: donors[link.slug] || [],
-              }
-            })
-          setOthers(otherStudents)
-        }
-      } catch (err) {
-        console.error('Error fetching data:', err)
-      } finally {
-        setLoading(false)
+  const fetchData = async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true)
+    try {
+      // Fetch stats from existing endpoint
+      let statsData = {}
+      const statsRes = await fetch(STATS_URL).then(r => r.json()).catch(() => ({ success: false }))
+      if (statsRes.success) {
+        statsData = statsRes.stats
+        setStatsMap(statsData)
       }
-    }
 
+      // Fetch donor details from Neon via HTTP API
+      let donors = {}
+      try {
+        const rows = await neonQuery(
+          `SELECT referred_by, donor_name, amount, subscription_id, created_at
+           FROM donations
+           WHERE status = 'completed'
+             AND referred_by IS NOT NULL
+           ORDER BY created_at DESC`
+        )
+        for (const row of rows) {
+          const entry = {
+            name:   row.donor_name || 'Anonymous',
+            amount: Number(row.amount),
+            date:   new Date(row.created_at).toISOString().split('T')[0],
+            type:   row.subscription_id ? 'SIP' : 'One-time',
+          }
+          if (!donors[row.referred_by]) donors[row.referred_by] = []
+          donors[row.referred_by].push(entry)
+        }
+        setDonorsMap(donors)
+      } catch (neonErr) {
+        const msg = neonErr?.message ?? String(neonErr)
+        console.error('[Neon] query failed:', msg)
+      }
+
+      // Fetch others (self-registered donation links)
+      const othersRes = await fetch(OTHERS_URL).then(r => r.json()).catch(() => ({ success: false }))
+      if (othersRes.success && othersRes.links) {
+        const otherStudents = othersRes.links
+          .filter(link => (
+            link.show_on_dashboard !== false &&
+            link.is_active !== false &&
+            link.slug &&
+            !coreStudentSlugs.has(link.slug)
+          ))
+          .map((link, idx) => {
+            const s = statsData[link.slug] || {}
+            return {
+              id: studentsData.length + idx + 1,
+              name: link.student_name || 'Anonymous',
+              batch: 5,
+              slug: link.slug,
+              rollNo: link.roll_no || `OTHER-${String(idx + 1).padStart(2, '0')}`,
+              donorsCollected:      s.donorsCollected      || 0,
+              donorTarget:          100,
+              sipConversions:       s.sipConversions       || 0,
+              totalAmountCollected: s.totalAmountCollected || 0,
+              sipMonthlyAmount:     s.sipMonthlyAmount     || 0,
+              donors: donors[link.slug] || [],
+            }
+          })
+        setOthers(otherStudents)
+      }
+    } catch (err) {
+      console.error('Error fetching data:', err)
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }
+
+  const refreshData = () => fetchData(true)
+
+  useEffect(() => {
     fetchData()
   }, [])
 
@@ -163,10 +168,12 @@ export const StudentsProvider = ({ children }) => {
     <StudentsContext.Provider value={{
       students,
       loading,
+      refreshing,
       directDonors,
       directDonorsLoading,
       directDonorsError,
       fetchDirectDonors,
+      refreshData,
     }}>
       {children}
     </StudentsContext.Provider>
@@ -175,7 +182,9 @@ export const StudentsProvider = ({ children }) => {
 
 export const useStudents = () => useContext(StudentsContext).students
 export const useStudentsLoading = () => useContext(StudentsContext).loading
+export const useStudentsRefreshing = () => useContext(StudentsContext).refreshing
 export const useDirectDonors = () => useContext(StudentsContext).directDonors
 export const useDirectDonorsLoading = () => useContext(StudentsContext).directDonorsLoading
 export const useDirectDonorsError = () => useContext(StudentsContext).directDonorsError
 export const useFetchDirectDonors = () => useContext(StudentsContext).fetchDirectDonors
+export const useRefreshData = () => useContext(StudentsContext).refreshData
