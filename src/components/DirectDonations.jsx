@@ -110,17 +110,18 @@ const DirectDonations = () => {
           </div>
         </motion.div>
 
-        <div className="overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
+          <table className="w-full text-sm min-w-[1200px]">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[5%]">#</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[25%]">Donor</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[12%]">Date</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[10%]">Time</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[12%]">Type</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[21%]">Referral Link</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[15%]">Amount</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[4%]">#</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[20%]">Donor</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[10%]">Date</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[8%]">Time</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[10%]">Type</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[18%]">Referral Link</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[20%]">Message</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[10%]">Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -128,7 +129,7 @@ const DirectDonations = () => {
                 <motion.tr
                   key={i}
                   initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }} transition={{ duration: 0.3, delay: i * 0.02 }}
+                  viewport={{ once: true }} transition={{ duration: 0.3, delay: i * 0.01 }}
                   className="border-b border-gray-100 hover:bg-rose-50/30 transition-colors"
                 >
                   <td className="px-4 py-3 text-gray-400 text-xs font-medium">{i + 1}</td>
@@ -162,6 +163,9 @@ const DirectDonations = () => {
                     ) : (
                       <span className="text-xs font-semibold text-gray-500">Direct</span>
                     )}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600 text-xs italic truncate" title={d.message}>
+                    {d.message || '-'}
                   </td>
                   <td className="px-4 py-3 text-right font-bold text-rose-600">{fmt(d.amount)}</td>
                 </motion.tr>
