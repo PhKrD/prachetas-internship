@@ -24,6 +24,7 @@ const neonQuery = async (query) => {
   const res = await fetch(NEON_API, {
     method: 'POST',
     headers: {
+      'Content-Type': 'application/json',
       'Neon-Connection-String': NEON_CONN,
     },
     body: JSON.stringify({ query, params: [] }),
@@ -87,8 +88,10 @@ export const StudentsProvider = ({ children }) => {
           if (!neonDonors[normalizedSlug]) neonDonors[normalizedSlug] = []
           neonDonors[normalizedSlug].push(entry)
         }
-        // Neon data overrides student-stats data (more fresh)
-        donors = neonDonors
+        // Only replace student-stats donors if Neon returned actual data
+        if (Object.keys(neonDonors).length > 0) {
+          donors = neonDonors
+        }
       } catch (neonErr) {
         console.error('[Neon] query failed, using student-stats donors as fallback:', neonErr?.message ?? String(neonErr))
       }
