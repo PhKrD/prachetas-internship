@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
-import { ExternalLink, Flame, Target, Users, Zap, RefreshCw } from 'lucide-react'
+import { ExternalLink, Flame, Target, Users, Zap, RefreshCw, Download } from 'lucide-react'
 import { useStudents, useStudentsLoading, useStudentsRefreshing, useRefreshData } from '../context/StudentsContext'
 import { studentsData } from '../data/studentsData'
+
+const SYNC_URL = 'https://prachetasfoundation.com/.netlify/functions/sync-payments'
 
 const CountUp = ({ target, duration = 2000 }) => {
   const [count, setCount] = useState(0)
@@ -29,6 +31,28 @@ const Hero = () => {
   const loading     = useStudentsLoading()
   const refreshing  = useStudentsRefreshing()
   const refreshData = useRefreshData()
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState('')
+
+  const syncPayments = async () => {
+    setSyncing(true)
+    setSyncMsg('')
+    try {
+      const res = await fetch(SYNC_URL, { method: 'POST' })
+      const data = await res.json()
+      if (data.success) {
+        setSyncMsg(`✅ ${data.synced} new payments synced`)
+        if (data.synced > 0) setTimeout(() => refreshData(), 1000)
+      } else {
+        setSyncMsg('❌ Sync failed')
+      }
+    } catch {
+      setSyncMsg('❌ Network error')
+    } finally {
+      setSyncing(false)
+      setTimeout(() => setSyncMsg(''), 5000)
+    }
+  }
   const mainBatchStudents = students.filter(s => s.batch >= 1 && s.batch <= 4)
   const totalDonors = students.reduce((s, x) => s + x.donorsCollected, 0)
   const totalSIP    = students.reduce((s, x) => s + x.sipConversions, 0)
@@ -58,16 +82,29 @@ const Hero = () => {
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
-        {/* Refresh button */}
-        <div className="absolute top-4 right-4">
-          <button
-            onClick={refreshData}
-            disabled={loading || refreshing}
-            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-            <span className="text-sm font-medium">{refreshing ? 'Refreshing...' : 'Refresh Data'}</span>
-          </button>
+        {/* Action buttons */}
+        <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+          <div className="flex gap-2">
+            <button
+              onClick={syncPayments}
+              disabled={syncing}
+              className="flex items-center gap-2 bg-emerald-500/20 hover:bg-emerald-500/30 backdrop-blur-sm text-emerald-200 px-4 py-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed border border-emerald-500/30"
+            >
+              <Download size={16} className={syncing ? 'animate-pulse' : ''} />
+              <span className="text-sm font-medium">{syncing ? 'Syncing...' : 'Sync Payments'}</span>
+            </button>
+            <button
+              onClick={refreshData}
+              disabled={loading || refreshing}
+              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+              <span className="text-sm font-medium">{refreshing ? 'Refreshing...' : 'Refresh Data'}</span>
+            </button>
+          </div>
+          {syncMsg && (
+            <span className="text-xs text-emerald-300 bg-black/40 px-3 py-1 rounded-full">{syncMsg}</span>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-2 gap-16 items-center">
