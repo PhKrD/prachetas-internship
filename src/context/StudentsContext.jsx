@@ -50,16 +50,23 @@ export const StudentsProvider = ({ children }) => {
   const fetchData = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true)
     try {
-      // Fetch stats from existing endpoint
+      // Fetch stats + donors from existing endpoint
       let statsData = {}
+      let donors = {}
       const statsRes = await fetch(STATS_URL).then(r => r.json()).catch(() => ({ success: false }))
       if (statsRes.success) {
-        statsData = statsRes.stats
+        statsData = statsRes.stats || {}
+        // student-stats now returns donors map too
+        if (statsRes.donors) {
+          for (const [slug, donorList] of Object.entries(statsRes.donors)) {
+            const normalizedSlug = normalizeSlug(slug)
+            donors[normalizedSlug] = donorList
+          }
+        }
         setStatsMap(statsData)
       }
 
-      // Fetch donor details from Neon via HTTP API
-      let donors = {}
+      // Try to fetch donor details from Neon directly (more up-to-date)
       try {
         const rows = await neonQuery(
           `SELECT referred_by, donor_name, amount, subscription_id, created_at
@@ -68,6 +75,7 @@ export const StudentsProvider = ({ children }) => {
              AND referred_by IS NOT NULL
            ORDER BY created_at DESC`
         )
+        const neonDonors = {}
         for (const row of rows) {
           const normalizedSlug = normalizeSlug(row.referred_by)
           const entry = {
@@ -76,14 +84,16 @@ export const StudentsProvider = ({ children }) => {
             date:   new Date(row.created_at).toISOString().split('T')[0],
             type:   row.subscription_id ? 'SIP' : 'One-time',
           }
-          if (!donors[normalizedSlug]) donors[normalizedSlug] = []
-          donors[normalizedSlug].push(entry)
+          if (!neonDonors[normalizedSlug]) neonDonors[normalizedSlug] = []
+          neonDonors[normalizedSlug].push(entry)
         }
-        setDonorsMap(donors)
+        // Neon data overrides student-stats data (more fresh)
+        donors = neonDonors
       } catch (neonErr) {
-        const msg = neonErr?.message ?? String(neonErr)
-        console.error('[Neon] query failed:', msg)
+        console.error('[Neon] query failed, using student-stats donors as fallback:', neonErr?.message ?? String(neonErr))
       }
+
+      setDonorsMap(donors)
 
       // Fetch others (self-registered donation links)
       const othersRes = await fetch(OTHERS_URL).then(r => r.json()).catch(() => ({ success: false }))
@@ -96,19 +106,19 @@ export const StudentsProvider = ({ children }) => {
             !coreStudentSlugs.has(link.slug)
           ))
           .map((link, idx) => {
-            const s = statsData[link.slug] || {}
+            const d = donors[link.slug] || []
             return {
               id: studentsData.length + idx + 1,
               name: link.student_name || 'Anonymous',
               batch: 5,
               slug: link.slug,
               rollNo: link.roll_no || `OTHER-${String(idx + 1).padStart(2, '0')}`,
-              donorsCollected:      s.donorsCollected      || 0,
+              donorsCollected:      d.length,
               donorTarget:          100,
-              sipConversions:       s.sipConversions       || 0,
-              totalAmountCollected: s.totalAmountCollected || 0,
-              sipMonthlyAmount:     s.sipMonthlyAmount     || 0,
-              donors: donors[link.slug] || [],
+              sipConversions:       d.filter(x => x.type === 'SIP').length,
+              totalAmountCollected: d.reduce((sum, x) => sum + x.amount, 0),
+              sipMonthlyAmount:     (statsData[link.slug] || {}).sipMonthlyAmount || 0,
+              donors: d,
             }
           })
         setOthers(otherStudents)
