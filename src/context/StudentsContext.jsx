@@ -70,11 +70,12 @@ export const StudentsProvider = ({ children }) => {
       // Try to fetch donor details from Neon directly (more up-to-date)
       try {
         const rows = await neonQuery(
-          `SELECT referred_by, donor_name, amount, subscription_id, created_at
+          `SELECT DISTINCT ON (COALESCE(payment_id, id::text))
+             referred_by, donor_name, amount, subscription_id, created_at
            FROM donations
            WHERE status = 'completed'
              AND referred_by IS NOT NULL
-           ORDER BY created_at DESC`
+           ORDER BY COALESCE(payment_id, id::text), created_at DESC`
         )
         const neonDonors = {}
         for (const row of rows) {
