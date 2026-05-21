@@ -64,7 +64,7 @@ const rawBatches = [
   /* Batch 4 */ [
     'Sanika Vishnu Awatade','Aarya Paresh Nimkar','Chaitanya Vaishampayan',
     'Himanshu Ramesh Pujari','Vedant Makarand Ranmale','Keshav Ganesh Miniyar',
-    'Dhruva Satpute','Atharva Kamble','Aryan Khairkhar','Pranjal Dattatray Hile',
+    'Dhruva Satpute','Atharva Kamble','Pranjal Dattatray Hile',
     'Shourya Mohite','Nidhi Vishwakarma','Bhargav Gorane','Aryan Santosh Divekar',
     'Manav Dhanraj Rachetti','Utkarsh Umashankar Gupta','Amogh Abhay Kulkarni',
     'Shreyak Girish Kadam','Shrihan Kedar Kulkarni','Ashish Arwade',

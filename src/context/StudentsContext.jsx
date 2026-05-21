@@ -12,9 +12,7 @@ const NEON_API  = 'https://api.c-3.us-east-1.aws.neon.tech/sql'
 const SLUG_MAPPING = {
   'amruta-shriramjwar-m9ah': 'amruta-shriramjwar',
   'amruta-shriramjwar': 'amruta-shriramjwar',
-  'aryan-khairkhar':    'aryan-khairkhar-b1',
-  'aryan-khairkhar-b1': 'aryan-khairkhar-b1',
-  'aryan-khairkhar-b4': 'aryan-khairkhar-b4',
+  'aryan-khairkhar-b1': 'aryan-khairkhar',
   'aman-khandelwal-k3mz': 'aman-khandelwal-k3mz',
   // Add more mappings as needed
 }
