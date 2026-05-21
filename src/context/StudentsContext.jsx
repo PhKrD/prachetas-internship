@@ -54,7 +54,7 @@ export const StudentsProvider = ({ children }) => {
       // Fetch stats + donors from existing endpoint
       let statsData = {}
       let donors = {}
-      const statsRes = await fetch(STATS_URL).then(r => r.json()).catch(() => ({ success: false }))
+      const statsRes = await fetch(`${STATS_URL}?t=${Date.now()}`).then(r => r.json()).catch(() => ({ success: false }))
       if (statsRes.success) {
         statsData = statsRes.stats || {}
         // student-stats now returns donors map too
