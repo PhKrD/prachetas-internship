@@ -32,7 +32,12 @@ const StudentCard = ({ student, onSelect }) => {
   const batch = batchMeta.find(b => b.id === student.batch)
   const pct = Math.round((student.donorsCollected / student.donorTarget) * 100)
   const achievement = getAchievement(pct)
-  const fmt = (n) => n >= 1000 ? `₹${(n / 1000).toFixed(0)}K` : `₹${n}`
+  const fmt = (n) => {
+    const v = Math.round((Number(n) + Number.EPSILON) * 100) / 100
+    if (v >= 1000) return `₹${(v / 1000).toFixed(0)}K`
+    const fractionDigits = Number.isInteger(v) ? 0 : 2
+    return `₹${v.toLocaleString('en-IN', { minimumFractionDigits: fractionDigits, maximumFractionDigits: 2 })}`
+  }
   const sipRate = student.donorsCollected > 0
     ? Math.round((student.sipConversions / student.donorsCollected) * 100) : 0
   const isSipChamp = sipRate >= 40
@@ -94,7 +99,9 @@ const StudentCard = ({ student, onSelect }) => {
       </div>
 
       <div className={`text-xs font-medium ${batch.text} mt-1`}>
-        {student.totalAmountCollected > 0 ? `₹${student.totalAmountCollected.toLocaleString('en-IN')} raised` : 'No donations yet'}
+        {student.totalAmountCollected > 0
+          ? `${fmt(student.totalAmountCollected)} raised`
+          : 'No donations yet'}
       </div>
     </motion.div>
   )

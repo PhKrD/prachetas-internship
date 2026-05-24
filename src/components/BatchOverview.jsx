@@ -58,7 +58,11 @@ const BatchOverview = ({ activeBatch, onSelectBatch }) => {
     }
   }).sort((a, b) => b.amount - a.amount).map((b, i) => ({ ...b, rank: i + 1 }))
 
-  const fmt = (n) => `₹${n.toLocaleString('en-IN')}`
+  const fmt = (n) => {
+    const v = Math.round((Number(n) + Number.EPSILON) * 100) / 100
+    const fractionDigits = Number.isInteger(v) ? 0 : 2
+    return `₹${v.toLocaleString('en-IN', { minimumFractionDigits: fractionDigits, maximumFractionDigits: 2 })}`
+  }
 
   return (
     <section id="batches" className="py-14 px-4 sm:px-6 lg:px-8 bg-gray-50">

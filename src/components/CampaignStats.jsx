@@ -2,7 +2,11 @@ import { motion } from 'framer-motion'
 import { Users, Repeat, IndianRupee, CalendarCheck } from 'lucide-react'
 import { useStudents } from '../context/StudentsContext'
 
-const fmt = (n) => `₹${n.toLocaleString('en-IN')}`
+const fmt = (n) => {
+  const v = Math.round((Number(n) + Number.EPSILON) * 100) / 100
+  const fractionDigits = Number.isInteger(v) ? 0 : 2
+  return `₹${v.toLocaleString('en-IN', { minimumFractionDigits: fractionDigits, maximumFractionDigits: 2 })}`
+}
 
 const CampaignStats = () => {
   const students     = useStudents()

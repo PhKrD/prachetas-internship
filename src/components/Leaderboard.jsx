@@ -17,7 +17,11 @@ const rankIcon = (rank) => {
   return <span className="text-xs font-bold text-gray-400 w-4 text-center">{rank}</span>
 }
 
-const fmt = (n) => `₹${n.toLocaleString('en-IN')}`
+const fmt = (n) => {
+  const v = Math.round((Number(n) + Number.EPSILON) * 100) / 100
+  const fractionDigits = Number.isInteger(v) ? 0 : 2
+  return `₹${v.toLocaleString('en-IN', { minimumFractionDigits: fractionDigits, maximumFractionDigits: 2 })}`
+}
 
 const Leaderboard = ({ onSelectStudent }) => {
   const students = useStudents()

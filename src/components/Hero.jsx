@@ -60,7 +60,11 @@ const Hero = () => {
   const DONOR_TARGET = 18000
   const pct = Math.round((totalDonors / DONOR_TARGET) * 100)
   const C = 2 * Math.PI * 54
-  const fmt = (n) => `₹${n.toLocaleString('en-IN')}`
+  const fmt = (n) => {
+    const v = Math.round((Number(n) + Number.EPSILON) * 100) / 100
+    const fractionDigits = Number.isInteger(v) ? 0 : 2
+    return `₹${v.toLocaleString('en-IN', { minimumFractionDigits: fractionDigits, maximumFractionDigits: 2 })}`
+  }
 
   return (
     <section

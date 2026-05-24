@@ -33,9 +33,13 @@ const Bar = ({ label, value, max, pct: forcePct, barColor, badge }) => {
   )
 }
 
-const fmt = (n) =>
-  n >= 100000 ? `₹${(n / 100000).toFixed(2)}L` :
-  n >= 1000   ? `₹${(n / 1000).toFixed(1)}K`   : `₹${n}`
+const fmt = (n) => {
+  const v = Math.round((Number(n) + Number.EPSILON) * 100) / 100
+  if (v >= 100000) return `₹${(v / 100000).toFixed(2)}L`
+  if (v >= 1000) return `₹${(v / 1000).toFixed(1)}K`
+  const fractionDigits = Number.isInteger(v) ? 0 : 2
+  return `₹${v.toLocaleString('en-IN', { minimumFractionDigits: fractionDigits, maximumFractionDigits: 2 })}`
+}
 
 const StudentProfile = ({ student, onBack }) => {
   const allStudents = useStudents()
