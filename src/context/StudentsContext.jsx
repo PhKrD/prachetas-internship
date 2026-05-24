@@ -26,6 +26,8 @@ const PAYMENT_SLUG_OVERRIDES = {
   pay_SsHgloiatK8TmM: 'aadya-shah',
   pay_SrF4gAvJhBEHiC: 'aadya-shah',
   pay_SshXSSuHm9lyGu: 'chinmay-vikas-chavan',
+  pay_St7UrIAgPTLJn0: 'parth-patil',
+  pay_St7UrIAgPTLJnO: 'parth-patil',
 }
 
 // Fallback attribution when provider-side referred_by is missing
@@ -59,6 +61,22 @@ const MANUAL_DONOR_OVERRIDES = {
       name: 'Apurva chavan',
       amount: 100,
       date: '2026-05-23',
+      type: 'One-time',
+    },
+  ],
+  'parth-patil': [
+    {
+      paymentId: 'pay_St7UrIAgPTLJn0',
+      name: 'Shatakshee Patil',
+      amount: 500,
+      date: '2026-05-24',
+      type: 'One-time',
+    },
+    {
+      paymentId: 'utr_485020494237',
+      name: 'PhonePe Donor',
+      amount: 500,
+      date: '2026-05-20',
       type: 'One-time',
     },
   ],
@@ -142,7 +160,7 @@ export const StudentsProvider = ({ children }) => {
            WHERE status = 'completed'
              AND (
                referred_by IS NOT NULL
-               OR payment_id IN ('pay_SsEQWRGPIRHLq8', 'pay_SsHg1oiatK8TmM', 'pay_SsHgloiatK8TmM', 'pay_SrF4gAvJhBEHiC', 'pay_SshXSSuHm9lyGu')
+               OR payment_id IN ('pay_SsEQWRGPIRHLq8', 'pay_SsHg1oiatK8TmM', 'pay_SsHgloiatK8TmM', 'pay_SrF4gAvJhBEHiC', 'pay_SshXSSuHm9lyGu', 'pay_St7UrIAgPTLJn0', 'pay_St7UrIAgPTLJnO')
              )
            ORDER BY COALESCE(payment_id, id::text), created_at DESC`
         )
