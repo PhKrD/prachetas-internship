@@ -89,6 +89,29 @@ const MANUAL_DONOR_OVERRIDES = {
       type: 'One-time',
     },
   ],
+  'kalyani-gajanan-jaybhaye': [
+    {
+      paymentId: 'upi_002404886084',
+      name: 'Rupali Balaji Lokhande',
+      amount: 100,
+      date: '2026-05-22',
+      type: 'One-time',
+    },
+    {
+      paymentId: 'utr_982212016672',
+      name: 'PhonePe Donor',
+      amount: 200,
+      date: '2026-05-22',
+      type: 'One-time',
+    },
+    {
+      paymentId: 'paytm_ref_306648792547',
+      name: 'satish doiphode',
+      amount: 500,
+      date: '2026-05-23',
+      type: 'One-time',
+    },
+  ],
 }
 
 const applyManualDonorOverrides = (baseDonors) => {
