@@ -141,6 +141,15 @@ const MANUAL_DONOR_OVERRIDES = {
       type: 'One-time',
     },
   ],
+  'nayan-daulat-suryawanshi': [
+    {
+      paymentId: 'upi_614120990477',
+      name: 'Snehal Ravindra More',
+      amount: 200,
+      date: '2026-05-21',
+      type: 'One-time',
+    },
+  ],
 }
 
 const applyManualDonorOverrides = (baseDonors) => {
