@@ -19,6 +19,13 @@ const SLUG_MAPPING = {
 
 const normalizeSlug = (slug) => SLUG_MAPPING[slug] || slug
 
+// Some Razorpay records are missing referred_by; force-map known payment IDs
+const PAYMENT_SLUG_OVERRIDES = {
+  pay_SsEQWRGPIRHLq8: 'aadya-shah',
+  pay_SsHg1oiatK8TmM: 'aadya-shah',
+  pay_SsHgloiatK8TmM: 'aadya-shah',
+}
+
 const neonQuery = async (query) => {
   const res = await fetch(NEON_API, {
     method: 'POST',
@@ -70,15 +77,20 @@ export const StudentsProvider = ({ children }) => {
       try {
         const rows = await neonQuery(
           `SELECT DISTINCT ON (COALESCE(payment_id, id::text))
-             referred_by, donor_name, amount, subscription_id, created_at
+             payment_id, referred_by, donor_name, amount, subscription_id, created_at
            FROM donations
            WHERE status = 'completed'
-             AND referred_by IS NOT NULL
+             AND (
+               referred_by IS NOT NULL
+               OR payment_id IN ('pay_SsEQWRGPIRHLq8', 'pay_SsHg1oiatK8TmM', 'pay_SsHgloiatK8TmM')
+             )
            ORDER BY COALESCE(payment_id, id::text), created_at DESC`
         )
         const neonDonors = {}
         for (const row of rows) {
-          const normalizedSlug = normalizeSlug(row.referred_by)
+          const sourceSlug = row.referred_by || PAYMENT_SLUG_OVERRIDES[row.payment_id]
+          if (!sourceSlug) continue
+          const normalizedSlug = normalizeSlug(sourceSlug)
           const entry = {
             name:   row.donor_name || 'Anonymous',
             amount: Number(row.amount),
