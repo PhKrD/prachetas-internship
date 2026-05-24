@@ -13,6 +13,7 @@ const SLUG_MAPPING = {
   'amruta-shriramjwar-m9ah': 'amruta-shriramjwar',
   'amruta-shriramjwar': 'amruta-shriramjwar',
   'aryan-khairkhar-b1': 'aryan-khairkhar',
+  'mukul-manohar-bhosale]': 'mukul-manohar-bhosale',
   'aman-khandelwal-k3mz': 'aman-khandelwal-k3mz',
   // Add more mappings as needed
 }
@@ -29,6 +30,8 @@ const PAYMENT_SLUG_OVERRIDES = {
   pay_St7UrIAgPTLJn0: 'parth-patil',
   pay_St7UrIAgPTLJnO: 'parth-patil',
   pay_Ssr6HIpnunImUE: 'aryan-khairkhar',
+  pay_Srk4B6w59dVI8d: 'mukul-manohar-bhosale',
+  pay_SsLxhIkLusDKsu: 'mukul-manohar-bhosale',
 }
 
 // Fallback attribution when provider-side referred_by is missing
@@ -122,6 +125,22 @@ const MANUAL_DONOR_OVERRIDES = {
       type: 'One-time',
     },
   ],
+  'mukul-manohar-bhosale': [
+    {
+      paymentId: 'pay_Srk4B6w59dVI8d',
+      name: 'Mukul Manohar Bhosale',
+      amount: 101,
+      date: '2026-05-20',
+      type: 'One-time',
+    },
+    {
+      paymentId: 'pay_SsLxhIkLusDKsu',
+      name: 'Aarnav Potharkar',
+      amount: 100,
+      date: '2026-05-22',
+      type: 'One-time',
+    },
+  ],
 }
 
 const applyManualDonorOverrides = (baseDonors) => {
@@ -202,7 +221,7 @@ export const StudentsProvider = ({ children }) => {
            WHERE status = 'completed'
              AND (
                referred_by IS NOT NULL
-               OR payment_id IN ('pay_SsEQWRGPIRHLq8', 'pay_SsHg1oiatK8TmM', 'pay_SsHgloiatK8TmM', 'pay_SrF4gAvJhBEHiC', 'pay_SshXSSuHm9lyGu', 'pay_St7UrIAgPTLJn0', 'pay_St7UrIAgPTLJnO', 'pay_Ssr6HIpnunImUE')
+               OR payment_id IN ('pay_SsEQWRGPIRHLq8', 'pay_SsHg1oiatK8TmM', 'pay_SsHgloiatK8TmM', 'pay_SrF4gAvJhBEHiC', 'pay_SshXSSuHm9lyGu', 'pay_St7UrIAgPTLJn0', 'pay_St7UrIAgPTLJnO', 'pay_Ssr6HIpnunImUE', 'pay_Srk4B6w59dVI8d', 'pay_SsLxhIkLusDKsu')
              )
            ORDER BY COALESCE(payment_id, id::text), created_at DESC`
         )
