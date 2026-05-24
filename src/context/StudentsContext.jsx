@@ -26,6 +26,48 @@ const PAYMENT_SLUG_OVERRIDES = {
   pay_SsHgloiatK8TmM: 'aadya-shah',
 }
 
+// Fallback attribution when provider-side referred_by is missing
+const MANUAL_DONOR_OVERRIDES = {
+  'aadya-shah': [
+    {
+      paymentId: 'pay_SsEQWRGPIRHLq8',
+      name: 'Abburi Visweswara Rao',
+      amount: 1000,
+      date: '2026-05-22',
+      type: 'One-time',
+    },
+    {
+      paymentId: 'pay_SsHg1oiatK8TmM',
+      name: 'Rohini',
+      amount: 500,
+      date: '2026-05-22',
+      type: 'One-time',
+    },
+  ],
+}
+
+const applyManualDonorOverrides = (baseDonors) => {
+  const merged = { ...baseDonors }
+
+  for (const [slug, manualDonors] of Object.entries(MANUAL_DONOR_OVERRIDES)) {
+    const existing = [...(merged[slug] || [])]
+    const existingIds = new Set(existing.map(d => d.paymentId).filter(Boolean))
+    const existingSig = new Set(existing.map(d => `${d.name}|${d.amount}|${d.date}|${d.type}`))
+
+    for (const donor of manualDonors) {
+      const sig = `${donor.name}|${donor.amount}|${donor.date}|${donor.type}`
+      if ((donor.paymentId && existingIds.has(donor.paymentId)) || existingSig.has(sig)) continue
+      existing.push(donor)
+      if (donor.paymentId) existingIds.add(donor.paymentId)
+      existingSig.add(sig)
+    }
+
+    merged[slug] = existing
+  }
+
+  return merged
+}
+
 const neonQuery = async (query) => {
   const res = await fetch(NEON_API, {
     method: 'POST',
@@ -92,6 +134,7 @@ export const StudentsProvider = ({ children }) => {
           if (!sourceSlug) continue
           const normalizedSlug = normalizeSlug(sourceSlug)
           const entry = {
+            paymentId: row.payment_id || null,
             name:   row.donor_name || 'Anonymous',
             amount: Number(row.amount),
             date:   new Date(row.created_at).toISOString().split('T')[0],
@@ -108,6 +151,7 @@ export const StudentsProvider = ({ children }) => {
         console.error('[Neon] query failed, using student-stats donors as fallback:', neonErr?.message ?? String(neonErr))
       }
 
+      donors = applyManualDonorOverrides(donors)
       setDonorsMap(donors)
 
       // Fetch others (self-registered donation links)
