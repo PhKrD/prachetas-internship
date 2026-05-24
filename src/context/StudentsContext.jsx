@@ -24,6 +24,7 @@ const PAYMENT_SLUG_OVERRIDES = {
   pay_SsEQWRGPIRHLq8: 'aadya-shah',
   pay_SsHg1oiatK8TmM: 'aadya-shah',
   pay_SsHgloiatK8TmM: 'aadya-shah',
+  pay_SrF4gAvJhBEHiC: 'aadya-shah',
 }
 
 // Fallback attribution when provider-side referred_by is missing
@@ -41,6 +42,13 @@ const MANUAL_DONOR_OVERRIDES = {
       name: 'Rohini',
       amount: 500,
       date: '2026-05-22',
+      type: 'One-time',
+    },
+    {
+      paymentId: 'pay_SrF4gAvJhBEHiC',
+      name: 'Shivli Soni',
+      amount: 100,
+      date: '2026-05-19',
       type: 'One-time',
     },
   ],
@@ -124,7 +132,7 @@ export const StudentsProvider = ({ children }) => {
            WHERE status = 'completed'
              AND (
                referred_by IS NOT NULL
-               OR payment_id IN ('pay_SsEQWRGPIRHLq8', 'pay_SsHg1oiatK8TmM', 'pay_SsHgloiatK8TmM')
+               OR payment_id IN ('pay_SsEQWRGPIRHLq8', 'pay_SsHg1oiatK8TmM', 'pay_SsHgloiatK8TmM', 'pay_SrF4gAvJhBEHiC')
              )
            ORDER BY COALESCE(payment_id, id::text), created_at DESC`
         )
