@@ -80,6 +80,15 @@ const MANUAL_DONOR_OVERRIDES = {
       type: 'One-time',
     },
   ],
+  'shambhavi-sachin-jagtap': [
+    {
+      paymentId: 'manual_shambhavi_anon_500_2026_05_24',
+      name: 'Anonymous',
+      amount: 500,
+      date: '2026-05-24',
+      type: 'One-time',
+    },
+  ],
 }
 
 const applyManualDonorOverrides = (baseDonors) => {
