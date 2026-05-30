@@ -46,6 +46,13 @@ const MANUAL_DONOR_OVERRIDES = {
       date: '2026-05-20',
       type: 'One-time',
     },
+    {
+      paymentId: 'gpay_615092411626',
+      name: 'NILESH SIDDHESHWAR PAWALE',
+      amount: 200,
+      date: '2026-05-30',
+      type: 'One-time',
+    },
   ],
   'shambhavi-sachin-jagtap': [
     {
