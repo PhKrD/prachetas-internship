@@ -34,48 +34,11 @@ const PAYMENT_SLUG_OVERRIDES = {
   pay_SsLxhIkLusDKsu: 'mukul-manohar-bhosale',
 }
 
-// Fallback attribution when provider-side referred_by is missing
+// Manual attribution ONLY for payments NOT recorded in the Neon donations table
+// (off-channel: PhonePe UTR, UPI direct, Paytm ref, manual cash/anonymous).
+// Razorpay payments are tracked in DB and attributed via referred_by — DO NOT duplicate them here.
 const MANUAL_DONOR_OVERRIDES = {
-  'aadya-shah': [
-    {
-      paymentId: 'pay_SsEQWRGPIRHLq8',
-      name: 'Abburi Visweswara Rao',
-      amount: 1000,
-      date: '2026-05-22',
-      type: 'One-time',
-    },
-    {
-      paymentId: 'pay_SsHg1oiatK8TmM',
-      name: 'Rohini',
-      amount: 500,
-      date: '2026-05-22',
-      type: 'One-time',
-    },
-    {
-      paymentId: 'pay_SrF4gAvJhBEHiC',
-      name: 'Shivli Soni',
-      amount: 100,
-      date: '2026-05-19',
-      type: 'One-time',
-    },
-  ],
-  'chinmay-vikas-chavan': [
-    {
-      paymentId: 'pay_SshXSSuHm9lyGu',
-      name: 'Apurva chavan',
-      amount: 100,
-      date: '2026-05-23',
-      type: 'One-time',
-    },
-  ],
   'parth-patil': [
-    {
-      paymentId: 'pay_St7UrIAgPTLJn0',
-      name: 'Shatakshee Patil',
-      amount: 500,
-      date: '2026-05-24',
-      type: 'One-time',
-    },
     {
       paymentId: 'utr_485020494237',
       name: 'PhonePe Donor',
@@ -95,13 +58,6 @@ const MANUAL_DONOR_OVERRIDES = {
   ],
   'kalyani-gajanan-jaybhaye': [
     {
-      paymentId: 'upi_002404886084',
-      name: 'Rupali Balaji Lokhande',
-      amount: 100,
-      date: '2026-05-22',
-      type: 'One-time',
-    },
-    {
       paymentId: 'utr_982212016672',
       name: 'PhonePe Donor',
       amount: 200,
@@ -116,41 +72,18 @@ const MANUAL_DONOR_OVERRIDES = {
       type: 'One-time',
     },
   ],
-  'aryan-khairkhar': [
+  'nikhil-shripad-patankar': [
     {
-      paymentId: 'pay_Ssr6HIpnunImUE',
-      name: 'Aryan Khairkhar',
-      amount: 26.26,
+      paymentId: 'gpay_650985656711',
+      name: 'NISHAD SUSHANT NAIK',
+      amount: 100,
       date: '2026-05-23',
       type: 'One-time',
     },
   ],
-  'mukul-manohar-bhosale': [
-    {
-      paymentId: 'pay_Srk4B6w59dVI8d',
-      name: 'Mukul Manohar Bhosale',
-      amount: 101,
-      date: '2026-05-20',
-      type: 'One-time',
-    },
-    {
-      paymentId: 'pay_SsLxhIkLusDKsu',
-      name: 'Aarnav Potharkar',
-      amount: 100,
-      date: '2026-05-22',
-      type: 'One-time',
-    },
-  ],
-  'nayan-daulat-suryawanshi': [
-    {
-      paymentId: 'upi_614120990477',
-      name: 'Snehal Ravindra More',
-      amount: 200,
-      date: '2026-05-21',
-      type: 'One-time',
-    },
-  ],
 }
+
+const sigOf = (d) => `${String(d.name || '').trim().toLowerCase()}|${Number(d.amount)}|${d.date}|${d.type}`
 
 const applyManualDonorOverrides = (baseDonors) => {
   const merged = { ...baseDonors }
@@ -158,10 +91,10 @@ const applyManualDonorOverrides = (baseDonors) => {
   for (const [slug, manualDonors] of Object.entries(MANUAL_DONOR_OVERRIDES)) {
     const existing = [...(merged[slug] || [])]
     const existingIds = new Set(existing.map(d => d.paymentId).filter(Boolean))
-    const existingSig = new Set(existing.map(d => `${d.name}|${d.amount}|${d.date}|${d.type}`))
+    const existingSig = new Set(existing.map(sigOf))
 
     for (const donor of manualDonors) {
-      const sig = `${donor.name}|${donor.amount}|${donor.date}|${donor.type}`
+      const sig = sigOf(donor)
       if ((donor.paymentId && existingIds.has(donor.paymentId)) || existingSig.has(sig)) continue
       existing.push(donor)
       if (donor.paymentId) existingIds.add(donor.paymentId)
@@ -182,6 +115,25 @@ const neonQuery = async (query) => {
       'Neon-Connection-String': NEON_CONN,
     },
     body: JSON.stringify({ query, params: [] }),
+  })
+  const data = await res.json()
+  if (data.message) throw new Error(data.message)
+  return data.rows ?? []
+}
+
+// Browser-compatible Neon query using CORS proxy
+const neonQueryBrowser = async (query) => {
+  const proxyUrl = 'https://corsproxy.io/?'
+  const targetUrl = NEON_API
+  const body = JSON.stringify({ query, params: [] })
+  
+  const res = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-neon-connection-string': NEON_CONN,
+    },
+    body,
   })
   const data = await res.json()
   if (data.message) throw new Error(data.message)
@@ -211,50 +163,31 @@ export const StudentsProvider = ({ children }) => {
       const statsRes = await fetch(`${STATS_URL}?t=${Date.now()}`).then(r => r.json()).catch(() => ({ success: false }))
       if (statsRes.success) {
         statsData = statsRes.stats || {}
-        // student-stats now returns donors map too
+        // student-stats may return multiple slug-variants that normalize to the same
+        // canonical student slug — CONCAT lists (with dedup) instead of overwriting.
+        // IMPORTANT: dedup only fires when MERGING a second slug variant into an already-
+        // populated entry. For the first occurrence we copy as-is, preserving legitimate
+        // same-amount same-day payments from the same donor (different transactions).
         if (statsRes.donors) {
           for (const [slug, donorList] of Object.entries(statsRes.donors)) {
             const normalizedSlug = normalizeSlug(slug)
-            donors[normalizedSlug] = donorList
+            if (!donors[normalizedSlug]) {
+              donors[normalizedSlug] = [...donorList]
+            } else {
+              const existing = donors[normalizedSlug]
+              const existingIds = new Set(existing.map(d => d.paymentId).filter(Boolean))
+              const existingSig = new Set(existing.map(sigOf))
+              for (const d of donorList) {
+                const sig = sigOf(d)
+                if ((d.paymentId && existingIds.has(d.paymentId)) || existingSig.has(sig)) continue
+                existing.push(d)
+                if (d.paymentId) existingIds.add(d.paymentId)
+                existingSig.add(sig)
+              }
+            }
           }
         }
         setStatsMap(statsData)
-      }
-
-      // Try to fetch donor details from Neon directly (more up-to-date)
-      try {
-        const rows = await neonQuery(
-          `SELECT DISTINCT ON (COALESCE(payment_id, id::text))
-             payment_id, referred_by, donor_name, amount, subscription_id, created_at
-           FROM donations
-           WHERE status = 'completed'
-             AND (
-               referred_by IS NOT NULL
-               OR payment_id IN ('pay_SsEQWRGPIRHLq8', 'pay_SsHg1oiatK8TmM', 'pay_SsHgloiatK8TmM', 'pay_SrF4gAvJhBEHiC', 'pay_SshXSSuHm9lyGu', 'pay_St7UrIAgPTLJn0', 'pay_St7UrIAgPTLJnO', 'pay_Ssr6HIpnunImUE', 'pay_Srk4B6w59dVI8d', 'pay_SsLxhIkLusDKsu')
-             )
-           ORDER BY COALESCE(payment_id, id::text), created_at DESC`
-        )
-        const neonDonors = {}
-        for (const row of rows) {
-          const sourceSlug = row.referred_by || PAYMENT_SLUG_OVERRIDES[row.payment_id]
-          if (!sourceSlug) continue
-          const normalizedSlug = normalizeSlug(sourceSlug)
-          const entry = {
-            paymentId: row.payment_id || null,
-            name:   row.donor_name || 'Anonymous',
-            amount: Number(row.amount),
-            date:   new Date(row.created_at).toISOString().split('T')[0],
-            type:   row.subscription_id ? 'SIP' : 'One-time',
-          }
-          if (!neonDonors[normalizedSlug]) neonDonors[normalizedSlug] = []
-          neonDonors[normalizedSlug].push(entry)
-        }
-        // Only replace student-stats donors if Neon returned actual data
-        if (Object.keys(neonDonors).length > 0) {
-          donors = neonDonors
-        }
-      } catch (neonErr) {
-        console.error('[Neon] query failed, using student-stats donors as fallback:', neonErr?.message ?? String(neonErr))
       }
 
       donors = applyManualDonorOverrides(donors)
@@ -304,8 +237,8 @@ export const StudentsProvider = ({ children }) => {
 
   const fetchDirectDonors = async (password) => {
     const cleaned = (password || '').trim()
-    if (!cleaned) {
-      setDirectDonorsError('Please enter password')
+    if (cleaned !== 'palanharkrsnadas') {
+      setDirectDonorsError('Incorrect password')
       return false
     }
 
@@ -313,26 +246,33 @@ export const StudentsProvider = ({ children }) => {
     setDirectDonorsError('')
 
     try {
-      // Fetch ALL donations from Neon (both personalized and direct)
-      const rows = await neonQuery(
-        `SELECT donor_name, amount, subscription_id, created_at, referred_by
-         FROM donations
-         WHERE status = 'completed'
-         ORDER BY created_at DESC`
-      )
+      // Use student-stats endpoint (already has all donors, no password/CORS issues)
+      const res = await fetch(`${STATS_URL}?t=${Date.now()}`)
+      const data = await res.json()
 
-      const allDonors = rows.map(row => ({
-        name: row.donor_name || 'Anonymous',
-        amount: Number(row.amount),
-        date: new Date(row.created_at).toISOString().split('T')[0],
-        type: row.subscription_id ? 'SIP' : 'One-time',
-        referredBy: row.referred_by || null,
-      }))
+      if (!data.success || !data.donors) {
+        throw new Error('Invalid response from server')
+      }
+
+      // Flatten all donors from all students into a single list
+      const allDonors = []
+      for (const [slug, donorList] of Object.entries(data.donors)) {
+        for (const donor of donorList) {
+          allDonors.push({
+            ...donor,
+            referredBy: slug,
+          })
+        }
+      }
+
+      // Sort by date descending
+      allDonors.sort((a, b) => new Date(b.date) - new Date(a.date))
 
       setDirectDonors(allDonors)
       return true
     } catch (err) {
-      setDirectDonorsError('Unable to load donations')
+      console.error('Direct donors fetch error:', err)
+      setDirectDonorsError(err.message || 'Unable to load donations')
       setDirectDonors([])
       return false
     } finally {
