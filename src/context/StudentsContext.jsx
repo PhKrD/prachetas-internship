@@ -32,6 +32,9 @@ const PAYMENT_SLUG_OVERRIDES = {
   pay_Ssr6HIpnunImUE: 'aryan-khairkhar',
   pay_Srk4B6w59dVI8d: 'mukul-manohar-bhosale',
   pay_SsLxhIkLusDKsu: 'mukul-manohar-bhosale',
+  pay_SupdZsOE32zbiW: 'sanjana-anand-ijeri',
+  pay_SotzbeuxcN8pRO: 'harsh-pravin-gosavi',
+  pay_Sw2TrcibONgIll: 'shital-mallinath-pujari',
 }
 
 // Manual attribution ONLY for payments NOT recorded in the Neon donations table
@@ -91,6 +94,8 @@ const MANUAL_DONOR_OVERRIDES = {
 }
 
 const sigOf = (d) => `${String(d.name || '').trim().toLowerCase()}|${Number(d.amount)}|${d.date}|${d.type}`
+const paymentIdOf = (d) => d.paymentId || d.payment_id || ''
+const slugForDonation = (slug, donor) => normalizeSlug(PAYMENT_SLUG_OVERRIDES[paymentIdOf(donor)] || slug)
 
 const applyManualDonorOverrides = (baseDonors) => {
   const merged = { ...baseDonors }
@@ -177,14 +182,21 @@ export const StudentsProvider = ({ children }) => {
         // same-amount same-day payments from the same donor (different transactions).
         if (statsRes.donors) {
           for (const [slug, donorList] of Object.entries(statsRes.donors)) {
-            const normalizedSlug = normalizeSlug(slug)
-            if (!donors[normalizedSlug]) {
-              donors[normalizedSlug] = [...donorList]
-            } else {
+            const donorListsBySlug = {}
+            for (const d of donorList) {
+              const normalizedSlug = slugForDonation(slug, d)
+              donorListsBySlug[normalizedSlug] = donorListsBySlug[normalizedSlug] || []
+              donorListsBySlug[normalizedSlug].push(d)
+            }
+            for (const [normalizedSlug, normalizedDonorList] of Object.entries(donorListsBySlug)) {
+              if (!donors[normalizedSlug]) {
+                donors[normalizedSlug] = [...normalizedDonorList]
+                continue
+              }
               const existing = donors[normalizedSlug]
               const existingIds = new Set(existing.map(d => d.paymentId).filter(Boolean))
               const existingSig = new Set(existing.map(sigOf))
-              for (const d of donorList) {
+              for (const d of normalizedDonorList) {
                 const sig = sigOf(d)
                 if ((d.paymentId && existingIds.has(d.paymentId)) || existingSig.has(sig)) continue
                 existing.push(d)
@@ -267,7 +279,7 @@ export const StudentsProvider = ({ children }) => {
         for (const donor of donorList) {
           allDonors.push({
             ...donor,
-            referredBy: slug,
+            referredBy: slugForDonation(slug, donor),
           })
         }
       }

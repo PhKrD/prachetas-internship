@@ -5,7 +5,7 @@ import { batchMeta } from '../data/studentsData'
 import { useStudents } from '../context/StudentsContext'
 
 const TABS = [
-  { key: 'donors', label: 'Top Donors', field: 'totalAmountCollected', isRupee: true },
+  { key: 'donors', label: 'Top Donors', field: 'donorsCollected' },
   { key: 'sip',    label: 'Top SIP',    field: 'sipConversions',  suffix: '' },
   { key: 'amount', label: 'Top Amount', field: 'totalAmountCollected', isRupee: true },
 ]

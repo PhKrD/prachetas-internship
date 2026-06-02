@@ -112,6 +112,7 @@ const StudentGrid = ({ activeBatch, onSelectStudent, onSelectBatch }) => {
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('donors')
   const displayBatchMeta = getBatchMeta(students)
+  const activeBatchStudentCount = activeBatch ? students.filter(s => s.batch === activeBatch).length : students.length
 
   const filtered = useMemo(() => {
     let list = activeBatch ? students.filter(s => s.batch === activeBatch) : students
@@ -180,7 +181,7 @@ const StudentGrid = ({ activeBatch, onSelectStudent, onSelectBatch }) => {
               {activeMeta?.name || 'All Students'}
             </h2>
             <p className="text-gray-500 text-sm mt-1">
-              {activeMeta ? `${activeMeta.count} students in ${activeMeta.name}` : 'All students across all batches'}
+              {activeMeta ? `${activeBatchStudentCount} students in ${activeMeta.name}` : 'All students across all batches'}
             </p>
           </div>
           {activeBatch && (
