@@ -5,9 +5,9 @@ import { batchMeta } from '../data/studentsData'
 import { useStudents } from '../context/StudentsContext'
 
 const TABS = [
+  { key: 'amount', label: 'Top Amount', field: 'totalAmountCollected', isRupee: true },
   { key: 'donors', label: 'Top Donors', field: 'donorsCollected' },
   { key: 'sip',    label: 'Top SIP',    field: 'sipConversions',  suffix: '' },
-  { key: 'amount', label: 'Top Amount', field: 'totalAmountCollected', isRupee: true },
 ]
 
 const rankIcon = (rank) => {
@@ -25,7 +25,7 @@ const fmt = (n) => {
 
 const Leaderboard = ({ onSelectStudent }) => {
   const students = useStudents()
-  const [tab, setTab] = useState('donors')
+  const [tab, setTab] = useState('amount')
   const [visibleCount, setVisibleCount] = useState(10)
   const current = TABS.find(t => t.key === tab)
   const top = [...students]
@@ -88,7 +88,7 @@ const Leaderboard = ({ onSelectStudent }) => {
             <tbody>
               {top.map((s, i) => {
                 const batch = getBatch(s.batch)
-                const isHighlighted = tab === 'donors' && i < 3
+                const isHighlighted = i < 3
                 return (
                   <tr
                     key={s.id}
