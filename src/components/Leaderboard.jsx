@@ -30,7 +30,12 @@ const Leaderboard = ({ onSelectStudent }) => {
   const current = TABS.find(t => t.key === tab)
   const top = [...students]
     .filter(s => s.batch >= 1 && s.batch <= 4)
-    .sort((a, b) => b[current.field] - a[current.field])
+    .sort((a, b) => {
+      const diff = (b[current.field] || 0) - (a[current.field] || 0)
+      if (diff !== 0) return diff
+      if (b.totalAmountCollected !== a.totalAmountCollected) return b.totalAmountCollected - a.totalAmountCollected
+      return a.name.localeCompare(b.name)
+    })
     .slice(0, visibleCount)
 
   const getBatch = (id) => batchMeta.find(b => b.id === id)
@@ -73,10 +78,11 @@ const Leaderboard = ({ onSelectStudent }) => {
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-10">#</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[38%]">Student</th>
-                <th className="hidden sm:table-cell text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[22%]">Batch</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[18%]">SIP</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[22%]">Raised</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[34%]">Student</th>
+                <th className="hidden sm:table-cell text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[16%]">Batch</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[16%]">Donors</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[14%]">SIP</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide w-[20%]">Raised</th>
               </tr>
             </thead>
             <tbody>
@@ -109,6 +115,11 @@ const Leaderboard = ({ onSelectStudent }) => {
                     </td>
                     <td className="hidden sm:table-cell px-4 py-3">
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${batch.badge}`}>{batch.name}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <span className={`font-bold ${tab === 'donors' ? 'text-green-700 text-base' : 'text-gray-700'}`}>
+                        {s.donorsCollected}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <span className={`font-bold ${tab === 'sip' ? 'text-blue-700 text-base' : 'text-gray-700'}`}>
