@@ -8,7 +8,12 @@ const DIRECT_DONATIONS_URL = 'https://prachetasfoundation.com/.netlify/functions
 const NEON_CONN = 'postgresql://neondb_owner:npg_4JGziLHbTnx5@ep-withered-block-ahmd8lhh-pooler.c-3.us-east-1.aws.neon.tech/neondb'
 const NEON_API  = 'https://api.c-3.us-east-1.aws.neon.tech/sql'
 
-// Mapping for fundraiser link slugs that don't match student slugs
+// Canonical slugs from the hardcoded student roster.
+const coreStudentSlugs = new Set(studentsData.map(s => s.slug))
+
+// Explicit overrides for slugs that CANNOT be auto-resolved (typos, stray characters,
+// or links that must intentionally stay separate). Most personalized links no longer
+// need an entry here — see normalizeSlug() below.
 const SLUG_MAPPING = {
   'amruta-shriramjwar-m9ah': 'amruta-shriramjwar',
   'amruta-shriramjwar': 'amruta-shriramjwar',
@@ -18,7 +23,22 @@ const SLUG_MAPPING = {
   // Add more mappings as needed
 }
 
-const normalizeSlug = (slug) => SLUG_MAPPING[slug] || slug
+// Resolve any fundraiser-link / donation slug to its canonical student slug.
+// Personalized links get a short random suffix appended by the link generator
+// (e.g. "dipali-balaji-lokhande-zv42", "yashwardhan-bhame-w52n", "aryan-khairkhar-b1").
+// Previously these orphaned the donation because matching was exact. We now strip a
+// single trailing "-xxxx" segment and, if the remainder is a known student, merge the
+// donation into that student automatically — so NO manual mapping is required for
+// future personalized links. Standalone links (whose base is not a known student)
+// are left untouched and continue to appear under "Others".
+const normalizeSlug = (slug) => {
+  if (!slug) return slug
+  if (SLUG_MAPPING[slug]) return SLUG_MAPPING[slug]
+  if (coreStudentSlugs.has(slug)) return slug
+  const stripped = slug.replace(/-[a-z0-9]+$/i, '')
+  if (stripped !== slug && coreStudentSlugs.has(stripped)) return stripped
+  return slug
+}
 
 // Some Razorpay records are missing referred_by; force-map known payment IDs
 const PAYMENT_SLUG_OVERRIDES = {
@@ -164,8 +184,6 @@ export const StudentsProvider = ({ children }) => {
   const [loading, setLoading]         = useState(true)
   const [refreshing, setRefreshing]   = useState(false)
 
-  const coreStudentSlugs = new Set(studentsData.map(s => s.slug))
-
   const fetchData = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true)
     try {
@@ -220,10 +238,10 @@ export const StudentsProvider = ({ children }) => {
             link.show_on_dashboard !== false &&
             link.is_active !== false &&
             link.slug &&
-            !coreStudentSlugs.has(link.slug)
+            !coreStudentSlugs.has(normalizeSlug(link.slug))
           ))
           .map((link, idx) => {
-            const d = donors[link.slug] || []
+            const d = donors[normalizeSlug(link.slug)] || []
             return {
               id: studentsData.length + idx + 1,
               name: link.student_name || 'Anonymous',
