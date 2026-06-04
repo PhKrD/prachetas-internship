@@ -7,6 +7,7 @@ import CampaignStats from './components/CampaignStats'
 import ImpactSection from './components/ImpactSection'
 import BatchOverview from './components/BatchOverview'
 import Leaderboard from './components/Leaderboard'
+import GroupLeaderboard from './components/GroupLeaderboard'
 import StudentGrid from './components/StudentGrid'
 import StudentProfile from './components/StudentProfile'
 import DirectDonations from './components/DirectDonations'
@@ -35,6 +36,7 @@ function App() {
             <MotivationStrip />
             <BatchOverview activeBatch={activeBatch} onSelectBatch={setActiveBatch} />
             <Leaderboard onSelectStudent={setSelectedStudent} />
+            <GroupLeaderboard onSelectStudent={setSelectedStudent} />
             <DirectDonations />
             <StudentGrid activeBatch={activeBatch} onSelectStudent={setSelectedStudent} onSelectBatch={setActiveBatch} />
             <Footer />
