@@ -24,19 +24,26 @@ const SLUG_MAPPING = {
 }
 
 // Resolve any fundraiser-link / donation slug to its canonical student slug.
-// Personalized links get a short random suffix appended by the link generator
-// (e.g. "dipali-balaji-lokhande-zv42", "yashwardhan-bhame-w52n", "aryan-khairkhar-b1").
-// Previously these orphaned the donation because matching was exact. We now strip a
-// single trailing "-xxxx" segment and, if the remainder is a known student, merge the
-// donation into that student automatically — so NO manual mapping is required for
-// future personalized links. Standalone links (whose base is not a known student)
-// are left untouched and continue to appear under "Others".
+// Personalized links produced by the link generator deviate from the roster slug in
+// two real-world ways:
+//   (a) a trailing random token   — "dipali-balaji-lokhande-zv42" -> "dipali-balaji-lokhande"
+//   (b) a shortened first-name link — "nidhi"                     -> "nidhi-vishwakarma"
+// Both orphaned the donation when matching was exact. We now merge a variant into a
+// student ONLY when EXACTLY ONE roster slug matches (variant is the student slug plus a
+// suffix, or is a leading segment of the student slug). Ambiguous first names like
+// "aryan" (5 students) match more than one, so they are left untouched and continue to
+// surface under "Others" — we never guess and never mis-attribute. No manual mapping is
+// required for future personalized links.
 const normalizeSlug = (slug) => {
   if (!slug) return slug
   if (SLUG_MAPPING[slug]) return SLUG_MAPPING[slug]
   if (coreStudentSlugs.has(slug)) return slug
-  const stripped = slug.replace(/-[a-z0-9]+$/i, '')
-  if (stripped !== slug && coreStudentSlugs.has(stripped)) return stripped
+  const matches = []
+  for (const core of coreStudentSlugs) {
+    if (slug.startsWith(core + '-')) matches.push(core)
+    else if (core.startsWith(slug + '-')) matches.push(core)
+  }
+  if (matches.length === 1) return matches[0]
   return slug
 }
 
@@ -113,6 +120,17 @@ const MANUAL_DONOR_OVERRIDES = {
   ],
 }
 
+// Specific donation records the team has CONFIRMED are the same payment recorded more
+// than once (e.g. captured via two channels with no distinguishing payment ID). Keyed
+// by canonical student slug; each listed signature is collapsed to a single entry.
+// We intentionally do NOT dedup identical signatures globally — some students legitimately
+// receive multiple same-amount same-day gifts — so only these confirmed cases are collapsed.
+const DUPLICATE_DONATION_SUPPRESSIONS = {
+  'nidhi-vishwakarma': [
+    { name: 'Santosh vishwakarma', amount: 2500, date: '2026-06-06', type: 'One-time' },
+  ],
+}
+
 const sigOf = (d) => `${String(d.name || '').trim().toLowerCase()}|${Number(d.amount)}|${d.date}|${d.type}`
 const paymentIdOf = (d) => d.paymentId || d.payment_id || ''
 const slugForDonation = (slug, donor) => normalizeSlug(PAYMENT_SLUG_OVERRIDES[paymentIdOf(donor)] || slug)
@@ -136,6 +154,31 @@ const applyManualDonorOverrides = (baseDonors) => {
     merged[slug] = existing
   }
 
+  return merged
+}
+
+// Confirmed-duplicate signatures for a canonical slug, or null if none configured.
+const duplicateSigsFor = (slug) => {
+  const dupes = DUPLICATE_DONATION_SUPPRESSIONS[slug]
+  return dupes ? new Set(dupes.map(sigOf)) : null
+}
+
+// Collapse team-confirmed duplicate records to a single entry (keeps the first copy).
+const collapseConfirmedDuplicates = (baseDonors) => {
+  const merged = { ...baseDonors }
+  for (const slug of Object.keys(DUPLICATE_DONATION_SUPPRESSIONS)) {
+    const list = merged[slug]
+    if (!list || !list.length) continue
+    const collapseSigs = duplicateSigsFor(slug)
+    const kept = new Set()
+    merged[slug] = list.filter(d => {
+      const sig = sigOf(d)
+      if (!collapseSigs.has(sig)) return true
+      if (kept.has(sig)) return false
+      kept.add(sig)
+      return true
+    })
+  }
   return merged
 }
 
@@ -228,6 +271,7 @@ export const StudentsProvider = ({ children }) => {
       }
 
       donors = applyManualDonorOverrides(donors)
+      donors = collapseConfirmedDuplicates(donors)
       setDonorsMap(donors)
 
       // Fetch others (self-registered donation links)
@@ -302,10 +346,23 @@ export const StudentsProvider = ({ children }) => {
         }
       }
 
-      // Sort by date descending
-      allDonors.sort((a, b) => new Date(b.date) - new Date(a.date))
+      // Collapse team-confirmed cross-channel duplicates (same payment recorded twice)
+      const dupKept = new Set()
+      const dedupedDonors = allDonors.filter(d => {
+        const sigs = duplicateSigsFor(d.referredBy)
+        if (!sigs) return true
+        const sig = sigOf(d)
+        if (!sigs.has(sig)) return true
+        const key = `${d.referredBy}|${sig}`
+        if (dupKept.has(key)) return false
+        dupKept.add(key)
+        return true
+      })
 
-      setDirectDonors(allDonors)
+      // Sort by date descending
+      dedupedDonors.sort((a, b) => new Date(b.date) - new Date(a.date))
+
+      setDirectDonors(dedupedDonors)
       return true
     } catch (err) {
       console.error('Direct donors fetch error:', err)
