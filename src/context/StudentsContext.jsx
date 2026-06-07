@@ -20,6 +20,7 @@ const SLUG_MAPPING = {
   'aryan-khairkhar-b1': 'aryan-khairkhar',
   'mukul-manohar-bhosale]': 'mukul-manohar-bhosale',
   'aman-khandelwal-k3mz': 'aman-khandelwal-k3mz',
+  'harshit-shirol-k7gp': 'harshit-ramesh-shirol',   // link omits middle name
   // Add more mappings as needed
 }
 
