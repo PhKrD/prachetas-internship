@@ -53,7 +53,12 @@ const StudentProfile = ({ student, onBack }) => {
     : 0
 
   const rank = [...allStudents]
-    .sort((a, b) => b.donorsCollected - a.donorsCollected)
+    .sort((a, b) => {
+      const diff = (b.totalAmountCollected || 0) - (a.totalAmountCollected || 0)
+      if (diff !== 0) return diff
+      if ((b.donorsCollected || 0) !== (a.donorsCollected || 0)) return (b.donorsCollected || 0) - (a.donorsCollected || 0)
+      return a.name.localeCompare(b.name)
+    })
     .findIndex(x => x.id === s.id) + 1
 
   const slug = student.slug
