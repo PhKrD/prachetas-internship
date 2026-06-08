@@ -78,6 +78,22 @@ const rawBatches = [
   ],
 ]
 
+/* Batch 5 — students onboarded via self-serve fundraiser links. Slugs are taken
+   verbatim from their referral links (they carry a random token that cannot be
+   derived from the name), so donations made through those links attribute directly. */
+const batch5 = [
+  { name: 'Aman Khandelwal', slug: 'aman-khandelwal-pjxy' },
+  { name: 'Arpit Gupta',     slug: 'arpit-gupta-0t5j'     },
+  { name: 'Manas Avhad',     slug: 'manas-avhad-1r0i'     },
+  { name: 'Mohit Saindane',  slug: 'mohit-saindane-r8pv'  },
+  { name: 'Shreyas',         slug: 'shreayas-kups'        },
+  { name: 'Siddhart',        slug: 'siddhart-fe45'        },
+  { name: 'Pranav',          slug: 'pranav-d6h0'          },
+  { name: 'Aditya',          slug: 'aditya-zwdt'          },
+  { name: 'Rohan Wagh',      slug: 'rohan-wagh-7k3d'      },
+  { name: 'Sahil',           slug: 'sahil-11t4'           },
+]
+
 /* Build flat list */
 const rawList = rawBatches.flatMap((names, bi) =>
   names.map(name => ({ name, batch: bi + 1 }))
@@ -101,9 +117,13 @@ const rawWithSlugs = rawList.map(s => {
   return { ...s, slug }
 })
 
+/* Append Batch 5 with explicit (verbatim) slugs */
+const batch5WithSlugs = batch5.map(({ name, slug }) => ({ name, batch: 5, slug }))
+const allWithSlugs = [...rawWithSlugs, ...batch5WithSlugs]
+
 /* Assign IDs and roll numbers — stats start at 0, real data fetched from Neon DB */
-const batchCounters = { 1: 0, 2: 0, 3: 0, 4: 0 }
-export const studentsData = rawWithSlugs.map((s, i) => {
+const batchCounters = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+export const studentsData = allWithSlugs.map((s, i) => {
   batchCounters[s.batch]++
   const pos = batchCounters[s.batch]
   return {
@@ -126,10 +146,11 @@ export const batchMeta = [
   { id:2, name:'Batch 2', gradFrom:'from-blue-400',   gradTo:'to-blue-600',   lightBg:'bg-blue-50',   border:'border-blue-200',   text:'text-blue-700',   badge:'bg-blue-100 text-blue-800',   ring:'ring-blue-400'   },
   { id:3, name:'Batch 3', gradFrom:'from-emerald-400',gradTo:'to-emerald-600',lightBg:'bg-emerald-50',border:'border-emerald-200',text:'text-emerald-700',badge:'bg-emerald-100 text-emerald-800',ring:'ring-emerald-400'},
   { id:4, name:'Batch 4', gradFrom:'from-violet-400', gradTo:'to-violet-600', lightBg:'bg-violet-50', border:'border-violet-200', text:'text-violet-700', badge:'bg-violet-100 text-violet-800', ring:'ring-violet-400' },
-  { id:5, name:'Others',  gradFrom:'from-gray-400',    gradTo:'to-gray-600',    lightBg:'bg-gray-50',    border:'border-gray-200',    text:'text-gray-700',    badge:'bg-gray-100 text-gray-800',    ring:'ring-gray-400'    },
+  { id:5, name:'Batch 5', gradFrom:'from-pink-400',   gradTo:'to-pink-600',   lightBg:'bg-pink-50',   border:'border-pink-200',   text:'text-pink-700',   badge:'bg-pink-100 text-pink-800',   ring:'ring-pink-400'   },
+  { id:6, name:'Others',  gradFrom:'from-gray-400',    gradTo:'to-gray-600',    lightBg:'bg-gray-50',    border:'border-gray-200',    text:'text-gray-700',    badge:'bg-gray-100 text-gray-800',    ring:'ring-gray-400'    },
 ]
 
 export const getBatchMeta = (students) => {
-  const hasOthers = students.some(s => s.batch === 5)
-  return hasOthers ? batchMeta : batchMeta.slice(0, 4)
+  const hasOthers = students.some(s => s.batch === 6)
+  return hasOthers ? batchMeta : batchMeta.filter(b => b.id <= 5)
 }

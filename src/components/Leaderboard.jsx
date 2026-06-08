@@ -29,7 +29,7 @@ const Leaderboard = ({ onSelectStudent }) => {
   const [visibleCount, setVisibleCount] = useState(10)
   const current = TABS.find(t => t.key === tab)
   const top = [...students]
-    .filter(s => s.batch >= 1 && s.batch <= 4)
+    .filter(s => s.batch >= 1 && s.batch <= 5)
     .sort((a, b) => {
       const diff = (b[current.field] || 0) - (a[current.field] || 0)
       if (diff !== 0) return diff
@@ -148,7 +148,7 @@ const Leaderboard = ({ onSelectStudent }) => {
               Show Less
             </button>
           )}
-          {visibleCount < students.filter(s => s.batch >= 1 && s.batch <= 4).length && (
+          {visibleCount < students.filter(s => s.batch >= 1 && s.batch <= 5).length && (
             <button
               onClick={() => setVisibleCount(prev => prev + 10)}
               className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"

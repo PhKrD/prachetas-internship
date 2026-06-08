@@ -291,7 +291,7 @@ export const StudentsProvider = ({ children }) => {
             return {
               id: studentsData.length + idx + 1,
               name: link.student_name || 'Anonymous',
-              batch: 5,
+              batch: 6,
               slug: link.slug,
               rollNo: link.roll_no || `OTHER-${String(idx + 1).padStart(2, '0')}`,
               donorsCollected:      d.length,
