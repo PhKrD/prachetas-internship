@@ -3,7 +3,7 @@ import { batchMeta } from '../data/studentsData'
 import { useStudents } from '../context/StudentsContext'
 import { Crown, Medal } from 'lucide-react'
 
-const batchMetaOnly = batchMeta.filter(b => b.id <= 5)
+const batchMetaOnly = batchMeta.filter(b => b.id <= 4)
 
 const ProgressBar = ({ value, max, colorClass }) => {
   const pct = Math.min(100, Math.round((value / max) * 100))
