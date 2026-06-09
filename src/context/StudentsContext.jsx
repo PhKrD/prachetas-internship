@@ -64,6 +64,7 @@ const PAYMENT_SLUG_OVERRIDES = {
   pay_SotzbeuxcN8pRO: 'harsh-pravin-gosavi',
   pay_Sw2TrcibONgIll: 'shital-mallinath-pujari',
   pay_Sy1cqss5X7T3pf: 'shital-mallinath-pujari',   // Shrishail Shivaputra chetage, Rs100, 2026-06-05
+  pay_SoinovlrLJyVpo: 'aman-khandelwal-pjxy',       // Arvind Laddha, Rs500, 2026-05-13
 }
 
 // Manual attribution ONLY for payments NOT recorded in the Neon donations table
