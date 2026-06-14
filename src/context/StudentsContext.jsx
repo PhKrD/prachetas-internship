@@ -134,6 +134,15 @@ const MANUAL_DONOR_OVERRIDES = {
       type: 'One-time',
     },
   ],
+  'harsh-pravin-gosavi': [
+    {
+      paymentId: 'gpay_124691011082',     // UPI txn ID, Google Pay, SEEMA PRAVIN GOSAVI
+      name: 'Seema Pravin Gosavi',
+      amount: 1000,
+      date: '2026-06-13',
+      type: 'One-time',
+    },
+  ],
 }
 
 // Specific donation records the team has CONFIRMED are the same payment recorded more
