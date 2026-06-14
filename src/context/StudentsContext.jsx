@@ -19,8 +19,10 @@ const SLUG_MAPPING = {
   'amruta-shriramjwar': 'amruta-shriramjwar',
   'aryan-khairkhar-b1': 'aryan-khairkhar',
   'mukul-manohar-bhosale]': 'mukul-manohar-bhosale',
-  'aman-khandelwal-k3mz': 'aman-khandelwal-k3mz',
+  'aman-khandelwal-k3mz': 'aman-khandelwal-pjxy',   // Aman's older/alt link -> his Batch 5 slug
   'harshit-shirol-k7gp': 'harshit-ramesh-shirol',   // link omits middle name
+  'aryan-kale-inzx': 'aryan-ganesh-kale',           // link omits middle name
+  'parth-baride-pg5c': 'parth-prashant-baride',     // link omits middle name
   // Add more mappings as needed
 }
 
@@ -65,6 +67,8 @@ const PAYMENT_SLUG_OVERRIDES = {
   pay_Sw2TrcibONgIll: 'shital-mallinath-pujari',
   pay_Sy1cqss5X7T3pf: 'shital-mallinath-pujari',   // Shrishail Shivaputra chetage, Rs100, 2026-06-05
   pay_SoinovlrLJyVpo: 'aman-khandelwal-pjxy',       // Arvind Laddha, Rs500, 2026-05-13
+  pay_TOBJfYnp9YDZsL: 'astha-gupta',               // PhonePe UPI, Rs500, 2026-06-12
+  pay_T0k09SqZkAPMol: 'dhruva-satpute',            // Sapana Thokale, Rs1000, 2026-06-12
 }
 
 // Manual attribution ONLY for payments NOT recorded in the Neon donations table
@@ -118,6 +122,15 @@ const MANUAL_DONOR_OVERRIDES = {
       name: 'NISHAD SUSHANT NAIK',
       amount: 100,
       date: '2026-05-23',
+      type: 'One-time',
+    },
+  ],
+  'astha-gupta': [
+    {
+      paymentId: 'pay_TOBJfYnp9YDZsL',   // Razorpay ID — auto-suppressed once DB is synced
+      name: 'PhonePe Donor',
+      amount: 500,
+      date: '2026-06-12',
       type: 'One-time',
     },
   ],
@@ -361,6 +374,17 @@ export const StudentsProvider = ({ children }) => {
         dupKept.add(key)
         return true
       })
+
+      // Include off-channel manual donations (not recorded in the DB) so the ledger
+      // total matches what the student profiles show.
+      const existingPaymentIds = new Set(dedupedDonors.map(d => paymentIdOf(d)).filter(Boolean))
+      for (const [slug, manualDonors] of Object.entries(MANUAL_DONOR_OVERRIDES)) {
+        for (const m of manualDonors) {
+          if (m.paymentId && existingPaymentIds.has(m.paymentId)) continue
+          dedupedDonors.push({ ...m, referredBy: slug })
+          if (m.paymentId) existingPaymentIds.add(m.paymentId)
+        }
+      }
 
       // Sort by date descending
       dedupedDonors.sort((a, b) => new Date(b.date) - new Date(a.date))

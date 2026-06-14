@@ -52,11 +52,15 @@ const StudentProfile = ({ student, onBack }) => {
     ? Math.round((s.sipConversions / s.donorsCollected) * 100)
     : 0
 
-  const rank = [...allStudents]
+  // Rank within the same population the Leaderboard uses (batches 1-5) and with the
+  // same comparator (amount desc, then name) so a student's Overall Rank always
+  // matches their Leaderboard position. Others (batch 6) rank among all students.
+  const inMainCampaign = s.batch >= 1 && s.batch <= 5
+  const rankPool = inMainCampaign ? allStudents.filter(x => x.batch >= 1 && x.batch <= 5) : allStudents
+  const rank = [...rankPool]
     .sort((a, b) => {
       const diff = (b.totalAmountCollected || 0) - (a.totalAmountCollected || 0)
       if (diff !== 0) return diff
-      if ((b.donorsCollected || 0) !== (a.donorsCollected || 0)) return (b.donorsCollected || 0) - (a.donorsCollected || 0)
       return a.name.localeCompare(b.name)
     })
     .findIndex(x => x.id === s.id) + 1
@@ -139,7 +143,7 @@ const StudentProfile = ({ student, onBack }) => {
         >
           <StatCard icon={Users}        label="Donors Enrolled"     value={s.donorsCollected}          sub="donors supporting" iconBg="bg-green-100"  iconColor="text-green-700" />
           <StatCard icon={Repeat}       label="SIP Conversions"     value={s.sipConversions}           sub={`${sipRate}% rate`}                iconBg="bg-blue-100"   iconColor="text-blue-700"  />
-          <StatCard icon={IndianRupee}  label="Total Raised"        value={fmt(s.totalAmountCollected)} sub="one-time donations"               iconBg="bg-orange-100" iconColor="text-orange-700"/>
+          <StatCard icon={IndianRupee}  label="Total Raised"        value={fmt(s.totalAmountCollected)} sub="across all donations"             iconBg="bg-orange-100" iconColor="text-orange-700"/>
           <StatCard icon={CalendarCheck}label="Monthly SIP"         value={fmt(s.sipMonthlyAmount)}    sub="recurring / month"                iconBg="bg-violet-100" iconColor="text-violet-700"/>
         </motion.div>
 

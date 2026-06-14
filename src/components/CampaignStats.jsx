@@ -11,17 +11,17 @@ const fmt = (n) => {
 const CampaignStats = () => {
   const students     = useStudents()
   const mainBatchStudents = students.filter(s => s.batch >= 1 && s.batch <= 5)
-  const totalDonors  = students.reduce((s, x) => s + x.donorsCollected, 0)
-  const totalSIP     = students.reduce((s, x) => s + x.sipConversions, 0)
+  const totalDonors  = mainBatchStudents.reduce((s, x) => s + x.donorsCollected, 0)
+  const totalSIP     = mainBatchStudents.reduce((s, x) => s + x.sipConversions, 0)
   const totalAmt     = mainBatchStudents.reduce((s, x) => s + x.totalAmountCollected, 0)
-  const totalMonthly = students.reduce((s, x) => s + x.sipMonthlyAmount, 0)
+  const totalMonthly = mainBatchStudents.reduce((s, x) => s + x.sipMonthlyAmount, 0)
 
   const cards = [
     {
       icon: IndianRupee,
       label: 'Total Amount Raised',
       value: fmt(totalAmt),
-      sub: 'one-time donations collected',
+      sub: 'across all donations collected',
       iconBg: 'bg-orange-100',
       iconColor: 'text-orange-700',
     },

@@ -194,7 +194,7 @@ const StudentGrid = ({ activeBatch, onSelectStudent, onSelectBatch }) => {
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex flex-wrap gap-2 items-center mb-6">
           {/* Search */}
           <div className="relative">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -215,16 +215,6 @@ const StudentGrid = ({ activeBatch, onSelectStudent, onSelectBatch }) => {
               {SORTS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
             </select>
           </div>
-        </div>
-
-        {/* Batch filter pills */}
-        <div className="flex gap-2 mb-6 flex-wrap">
-          <button
-            onClick={() => activeBatch && onSelectStudent && false}
-            className="text-xs text-gray-400 py-1 px-1"
-          >
-            {/* placeholder — batch filter is driven from BatchOverview */}
-          </button>
         </div>
 
         {filtered.length === 0 ? (

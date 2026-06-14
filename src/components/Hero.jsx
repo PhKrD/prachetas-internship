@@ -54,8 +54,8 @@ const Hero = () => {
     }
   }
   const mainBatchStudents = students.filter(s => s.batch >= 1 && s.batch <= 5)
-  const totalDonors = students.reduce((s, x) => s + x.donorsCollected, 0)
-  const totalSIP    = students.reduce((s, x) => s + x.sipConversions, 0)
+  const totalDonors = mainBatchStudents.reduce((s, x) => s + x.donorsCollected, 0)
+  const totalSIP    = mainBatchStudents.reduce((s, x) => s + x.sipConversions, 0)
   const totalAmt    = mainBatchStudents.reduce((s, x) => s + x.totalAmountCollected, 0)
   const DONOR_TARGET = 18000
   const pct = Math.round((totalDonors / DONOR_TARGET) * 100)
