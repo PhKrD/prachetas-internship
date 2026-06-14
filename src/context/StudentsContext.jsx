@@ -69,6 +69,7 @@ const PAYMENT_SLUG_OVERRIDES = {
   pay_SoinovlrLJyVpo: 'aman-khandelwal-pjxy',       // Arvind Laddha, Rs500, 2026-05-13
   pay_TOBJfYnp9YDZsL: 'astha-gupta',               // PhonePe UPI, Rs500, 2026-06-12
   pay_T0k09SqZkAPMol: 'dhruva-satpute',            // Sapana Thokale, Rs1000, 2026-06-12
+  pay_T11ppzlalde8sn: 'vignesh-yogesh-jadhav',     // 2026-06-14
 }
 
 // Manual attribution ONLY for payments NOT recorded in the Neon donations table
